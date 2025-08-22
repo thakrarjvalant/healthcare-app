@@ -1,0 +1,179 @@
+version: '3.8'
+
+services:
+  # Database
+  database:
+    image: mysql:8.0
+    container_name: healthcare_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: healthcare_system
+      MYSQL_USER: healthcare_user
+      MYSQL_PASSWORD: healthcare_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/database/init:/docker-entrypoint-initdb.d
+    networks:
+      - healthcare_network
+
+  # User Service
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: healthcare_user_service
+    ports:
+      - "8001:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Appointment Service
+  appointment-service:
+    build:
+      context: ./backend/appointment-service
+      dockerfile: Dockerfile
+    container_name: healthcare_appointment_service
+    ports:
+      - "8002:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Clinical Service
+  clinical-service:
+    build:
+      context: ./backend/clinical-service
+      dockerfile: Dockerfile
+    container_name: healthcare_clinical_service
+    ports:
+      - "8003:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./backend/notification-service
+      dockerfile: Dockerfile
+    container_name: healthcare_notification_service
+    ports:
+      - "8004:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Billing Service
+  billing-service:
+    build:
+      context: ./backend/billing-service
+      dockerfile: Dockerfile
+    container_name: healthcare_billing_service
+    ports:
+      - "8005:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Storage Service
+  storage-service:
+    build:
+      context: ./backend/storage
+      dockerfile: Dockerfile
+    container_name: healthcare_storage_service
+    ports:
+      - "8006:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Admin UI
+  admin-ui:
+    build:
+      context: ./backend/admin-ui
+      dockerfile: Dockerfile
+    container_name: healthcare_admin_ui
+    ports:
+      - "8007:8000"
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+      DB_NAME: healthcare_system
+      DB_USER: healthcare_user
+      DB_PASS: healthcare_password
+    depends_on:
+      - database
+    networks:
+      - healthcare_network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: healthcare_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8000/api
+    depends_on:
+      - user-service
+      - appointment-service
+      - clinical-service
+      - notification-service
+      - billing-service
+      - storage-service
+    networks:
+      - healthcare_network
+
+volumes:
+  db_data:
+
+networks:
+  healthcare_network:
+    driver: bridge

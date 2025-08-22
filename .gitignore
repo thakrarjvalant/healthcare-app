@@ -1,0 +1,29 @@
+# Node
+node_modules/
+frontend/node_modules/
+
+# PHP
+vendor/
+composer.lock
+
+# Environment
+.env
+.env.*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+
+# Temporary
+*.tmp

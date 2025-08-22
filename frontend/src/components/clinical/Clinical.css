@@ -1,0 +1,148 @@
+.medical-records {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.medical-records h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.medical-record {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.record-date {
+  font-weight: bold;
+  color: #333;
+}
+
+.record-doctor {
+  color: #666;
+}
+
+.record-expand {
+  color: #007bff;
+  font-size: 18px;
+}
+
+.record-details {
+  padding: 20px;
+  background-color: #fff;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.detail-section p {
+  margin: 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+.treatment-plan {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.treatment-plan h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.plan-section {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plan-section h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.plan-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-weight: bold;
+  color: #555;
+  font-size: 14px;
+}
+
+.detail-value {
+  font-size: 16px;
+  color: #333;
+}
+
+.medications-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.medications-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.medications-list li:last-child {
+  border-bottom: none;
+}
+
+.medication-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.medication-dosage {
+  color: #666;
+  font-size: 14px;
+}
