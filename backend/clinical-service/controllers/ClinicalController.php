@@ -2,16 +2,16 @@
 
 namespace ClinicalService\Controllers;
 
-use ClinicalService\ClinicalService;
+use ClinicalService\Services\ClinicalService;
 use UserService\Middleware\AuthMiddleware;
 
 class ClinicalController {
     private $clinicalService;
-    
+
     public function __construct(ClinicalService $clinicalService) {
         $this->clinicalService = $clinicalService;
     }
-    
+
     /**
      * Create a new medical record
      * @param array $request
@@ -250,4 +250,84 @@ class ClinicalController {
             ];
         }
     }
+    
+    public function getMedicalHistory($request) {
+        // Require authentication
+        $authResult = AuthMiddleware::requireAuth($request);
+        if ($authResult['status'] !== 200) {
+            return $authResult;
+        }
+        
+        $patientId = $request['params']['patientId'] ?? '';
+        
+        if (empty($patientId)) {
+            return [
+                'status' => 400,
+                'data' => [
+                    'message' => 'Patient ID is required'
+                ]
+            ];
+        }
+        
+        // Check if user has permission to view these records
+        $userId = $authResult['data']['user']['id'];
+        $userRole = $authResult['data']['user']['role'];
+        
+        if ($userRole !== 'admin' && $userRole !== 'doctor' && $userId != $patientId) {
+            return [
+                'status' => 403,
+                'data' => [
+                    'message' => 'Insufficient permissions'
+                ]
+            ];
+        }
+        
+        $result = $this->clinicalService->getMedicalHistory($patientId);
+        
+        if ($result['success']) {
+            return ['status' => 200, 'data' => $result];
+        }
+        return ['status' => 404, 'data' => $result];
+    }
+
+    public function getTreatmentPlans($request) {
+        // Require authentication
+        $authResult = AuthMiddleware::requireAuth($request);
+        if ($authResult['status'] !== 200) {
+            return $authResult;
+        }
+        
+        $patientId = $request['params']['patientId'] ?? '';
+        
+        if (empty($patientId)) {
+            return [
+                'status' => 400,
+                'data' => [
+                    'message' => 'Patient ID is required'
+                ]
+            ];
+        }
+        
+        // Check if user has permission to view these records
+        $userId = $authResult['data']['user']['id'];
+        $userRole = $authResult['data']['user']['role'];
+        
+        if ($userRole !== 'admin' && $userRole !== 'doctor' && $userId != $patientId) {
+            return [
+                'status' => 403,
+                'data' => [
+                    'message' => 'Insufficient permissions'
+                ]
+            ];
+        }
+        
+        $result = $this->clinicalService->getTreatmentPlans($patientId);
+        
+        if ($result['success']) {
+            return ['status' => 200, 'data' => $result];
+        }
+        return ['status' => 404, 'data' => $result];
+    }
+}
+}
 }
