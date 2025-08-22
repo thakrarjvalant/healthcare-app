@@ -1,77 +1,187 @@
-# Healthcare Management System (Repository)
+# Healthcare Management System
 
 A comprehensive healthcare management system built with a microservices architecture.
 
-This repository contains the full project and a small set of repository-support files to help you push this workspace to GitHub and create a Project board.
+## Overview
 
-## Quick repository setup (Windows PowerShell)
+This Healthcare Management System is designed to streamline the operations of healthcare facilities by providing a centralized platform for managing patients, doctors, appointments, medical records, billing, and more. The system follows a microservices architecture to ensure scalability, maintainability, and flexibility.
 
-Prerequisites: Git, GitHub CLI (`gh`), Docker, Docker Compose, Node.js, PHP, Composer
+## Features
 
-From the repo root (example path on this machine):
+### User Roles
+- **Patient**: Can register, login, book appointments, and view medical history
+- **Doctor**: Can manage appointments and create treatment plans
+- **Receptionist**: Can manage appointments and patient information
+- **Admin**: Can manage users, roles, permissions, and system configuration
 
-```powershell
-cd d:\customprojects\healthcare-app
-# initialize local git
-git init
-git add .
-git commit -m "Initial import"
+### Services
+1. **User Service**: Handles user registration, authentication, and profile management
+2. **Appointment Service**: Manages appointment booking, scheduling, and availability
+3. **Clinical Service**: Handles medical records, treatment plans, and clinical data
+4. **Notification Service**: Sends emails, SMS, and other notifications
+5. **Billing Service**: Manages billing and invoicing
+6. **Storage Service**: Handles document storage and retrieval
+7. **Admin UI**: Provides administrative interface for user and system management
 
-# create remote repo and push (interactive)
-gh auth login
-gh repo create <OWNER>/healthcare-app --public --source="." --remote=origin --push
+## Project Structure
 
-# create a repository-scoped project (classic Projects v1 example)
-gh project create "Healthcare App" --repo <OWNER>/healthcare-app --body "Project board for healthcare-app"
-
-# Optionally create columns (classic projects)
-gh project column create "Backlog" --project "Healthcare App" --repo <OWNER>/healthcare-app
-gh project column create "To do" --project "Healthcare App" --repo <OWNER>/healthcare-app
-gh project column create "In progress" --project "Healthcare App" --repo <OWNER>/healthcare-app
-gh project column create "Review / QA" --project "Healthcare App" --repo <OWNER>/healthcare-app
-gh project column create "Done" --project "Healthcare App" --repo <OWNER>/healthcare-app
+```
+healthcare-app/
+├── backend/
+│   ├── user-service/
+│   ├── appointment-service/
+│   ├── clinical-service/
+│   ├── notification-service/
+│   ├── billing-service/
+│   ├── storage/
+│   ├── admin-ui/
+│   ├── shared/
+│   ├── database/
+│   └── README.md
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   └── README.md
+├── docs/
+│   ├── architecture/
+│   ├── api/
+│   ├── user-guides/
+│   └── developer-guides/
+├── docker-compose.yml
+└── README.md
 ```
 
-Notes:
-- Run `gh auth login` first to authenticate the GitHub CLI.
-- GitHub Projects v2 has a different API and `gh` support varies by account; you can create Projects v2 from the web UI if needed.
+## Getting Started
 
-## What I added for you
+### Prerequisites
+- Docker and Docker Compose
+- Node.js 14.x or higher (for local development)
+- PHP 8.0 or higher (for local development)
+- MySQL 5.7 or higher (for local development)
 
-- `.gitignore` — ignores node_modules, vendor, env files, build artifacts, and common editor files.
-- `.github/workflows/ci.yml` — a basic CI workflow that checks frontend deps and runs quick checks on PHP files.
-- `.github/issue_templates/*` — templates for bugs and feature requests.
-- `.github/labels.yml` — a starter label set.
-- `.github/PROJECT_BOARD.md` — guidance for creating a project board.
+### Installation
 
-## Local dev quickstart
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd healthcare-app
+   ```
 
-1. Build and start services with Docker Compose:
+2. Start the services using Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
 
-```powershell
-cd d:\customprojects\healthcare-app
-docker-compose up --build -d
-```
+3. The application will be available at:
+   - Frontend: `http://localhost:3000`
+   - User Service API: `http://localhost:8001`
+   - Appointment Service API: `http://localhost:8002`
+   - Clinical Service API: `http://localhost:8003`
+   - Notification Service API: `http://localhost:8004`
+   - Billing Service API: `http://localhost:8005`
+   - Storage Service API: `http://localhost:8006`
+   - Admin UI: `http://localhost:8007`
 
-2. Frontend
+### Local Development
 
-```powershell
+#### Frontend
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm start
+   ```
+
+#### Backend Services
+Each backend service can be run locally:
+
+1. Navigate to a service directory:
+   ```bash
+   cd backend/user-service
+   ```
+
+2. Install dependencies:
+   ```bash
+   composer install
+   ```
+
+3. Start the service:
+   ```bash
+   php -S localhost:8000
+   ```
+
+## Documentation
+
+### Architecture
+- [System Architecture](docs/architecture/system-architecture.md)
+- [Database Schema](docs/architecture/database-schema.md)
+
+### API
+- [User Service API](docs/api/user-service-api.md)
+- [Appointment Service API](docs/api/appointment-service-api.md)
+- [Clinical Service API](docs/api/clinical-service-api.md)
+- [Notification Service API](docs/api/notification-service-api.md)
+- [Billing Service API](docs/api/billing-service-api.md)
+- [Storage Service API](docs/api/storage-service-api.md)
+
+### User Guides
+- [Patient User Guide](docs/user-guides/patient-user-guide.md)
+- [Doctor User Guide](docs/user-guides/doctor-user-guide.md)
+- [Receptionist User Guide](docs/user-guides/receptionist-user-guide.md)
+- [Admin User Guide](docs/user-guides/admin-user-guide.md)
+
+### Developer Guides
+- [User Service Developer Guide](docs/developer-guides/user-service.md)
+- [Appointment Service Developer Guide](docs/developer-guides/appointment-service.md)
+- [Clinical Service Developer Guide](docs/developer-guides/clinical-service.md)
+- [Notification Service Developer Guide](docs/developer-guides/notification-service.md)
+- [Billing Service Developer Guide](docs/developer-guides/billing-service.md)
+- [Storage Service Developer Guide](docs/developer-guides/storage-service.md)
+
+## Testing
+
+### Frontend
+Run frontend tests with:
+```bash
 cd frontend
-npm install
-npm start
+npm test
 ```
 
-3. Backend (example `user-service`)
-
-```powershell
-cd backend\user-service
-composer install
-php -S localhost:8000
+### Backend Services
+Run backend tests with:
+```bash
+cd backend/user-service
+composer test
 ```
 
-## CI and Issues
+## Deployment
 
-- See `.github/workflows/ci.yml` for the CI job.
-- Use `.github/issue_templates` when creating issues to keep reports consistent.
+### Docker
+The application can be deployed using Docker and Docker Compose as shown in the Installation section.
 
-If you want, I can (A) provide the exact PowerShell commands you can run locally to create the remote repo and project, or (B) attempt to run them for you here — option (B) requires that you supply a GitHub token with repo and project permissions (not recommended to paste tokens in chat). Tell me which you prefer.
+### Kubernetes
+For production deployments, Kubernetes manifests are available in the `k8s` directory.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+If you encounter any issues or have questions about the system, please contact our support team at support@healthcaresystem.com or call (123) 456-7890.
