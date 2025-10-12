@@ -25,8 +25,18 @@ The `shared` directory contains components that are used across multiple service
 The `database` directory contains database-related files:
 
 - `migrations` - Database migration scripts
-- `seeds` - Database seed data
+- `seeds` - Database seed data (creates initial users)
 - `config.php` - Database configuration
+- `DatabaseConnection.php` - Shared database connection class
+- `migrate.php` - Runs all migrations
+- `seed.php` - Runs all seeders
+
+### Database Integration
+All services now use the shared MySQL database:
+- **User Service**: Fully integrated with database authentication
+- **No mock data**: All authentication uses real database users
+- **Password hashing**: Uses PHP's `password_hash()` and `password_verify()`
+- **Shared connection**: All services use `DatabaseConnection` class
 
 ## Getting Started
 
@@ -59,18 +69,73 @@ Each service requires the following environment variables:
 To set up the database schema, run the migration scripts:
 
 ```bash
-cd database
+cd backend/database
+composer install  # If not already done
 php migrate.php
 ```
 
 ### Seeding Data
 
-To populate the database with initial data, run the seed scripts:
+To populate the database with initial users, run the seed scripts:
 
 ```bash
-cd database
+cd backend/database
 php seed.php
 ```
+
+**Default users created by seeder:**
+- Admin: `admin@example.com` / `password123`
+- Doctor: `jane.smith@example.com` / `password123`
+- Receptionist: `bob.receptionist@example.com` / `password123`
+- Patient: `john.doe@example.com` / `password123`
+- Medical Coordinator: `medical.coordinator@example.com` / `password123`
+
+### Quick run (per service)
+For each service:
+
+```bash
+cd backend/<service-name>
+cp .env.example .env
+composer install
+# update DB credentials in .env
+php artisan migrate
+php artisan serve --host=0.0.0.0 --port=<service-port>
+```
+
+Example for billing-service:
+```bash
+cd backend/billing-service
+cp .env.example .env
+composer install
+php artisan migrate
+php artisan serve --host=0.0.0.0 --port=8005
+```
+
+### Run with Docker Compose
+If you prefer containers, start all services with docker-compose from the repo root:
+
+```bash
+cp .env.example .env
+docker-compose up -d
+docker-compose logs -f billing-service
+```
+
+## Documentation
+
+### 📚 Complete Documentation
+All documentation has been organized in the [docs/](../docs/) directory. Start with [docs/README.md](../docs/README.md) for a complete overview.
+
+### 🚀 Quick Links
+- [Setup Guide](../docs/SETUP_GUIDE.md) - Complete installation instructions
+- [Database Seeding Report](../docs/updates/DATABASE_SEEDERS_FINAL_REPORT.md) - Database seeding implementation details
+- [Test Credentials](../docs/roles/TEST_CREDENTIALS.md) - Working login credentials
+- [Changelog](../docs/updates/CHANGELOG.md) - Version history and changes
+- [Recent Changes Summary](../docs/updates/RECENT_CHANGES_SUMMARY.md) - Summary of latest updates
+
+### 🏗️ Technical Documentation
+- [System Architecture](../docs/architecture/system-architecture.md)
+- [API Reference](../docs/api/)
+- [Developer Guides](../docs/developer-guides/)
 
 ## API Documentation
 

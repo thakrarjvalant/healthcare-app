@@ -56,6 +56,18 @@ Create a `.env` file in the frontend directory with the following variables:
 REACT_APP_API_BASE_URL=http://localhost:8000/api
 ```
 
+## Documentation
+
+### 📚 Complete Documentation
+All documentation has been organized in the [docs/](../docs/) directory. Start with [docs/README.md](../docs/README.md) for a complete overview.
+
+### 🚀 Quick Links
+- [Dashboard Features](../docs/features/DASHBOARD_FEATURES.md) - Detailed feature documentation
+- [Transferred Features Summary](../docs/features/TRANSFERRED_FEATURES_SUMMARY.md) - Features moved between roles
+- [Frontend Build Optimization](../docs/FRONTEND_BUILD_OPTIMIZATION.md) - Build optimization techniques
+- [Test Credentials](../docs/roles/TEST_CREDENTIALS.md) - Working login credentials
+- [Troubleshooting Guide](../docs/TROUBLESHOOTING.md) - Common issues and solutions
+
 ## Development
 
 ### Components
@@ -77,6 +89,7 @@ Each user role has its own dashboard:
 - `pages/doctor/` - Doctor dashboard and features
 - `pages/receptionist/` - Receptionist dashboard and features
 - `pages/admin/` - Admin dashboard and features
+- `pages/medical-coordinator/` - Medical Coordinator dashboard and features
 
 ### Context
 

@@ -1,0 +1,55 @@
+# Version control
+.git
+.gitignore
+
+# Documentation (if not needed in containers)
+*.md
+docs/
+
+# Development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (handled per service)
+**/node_modules
+
+# Build artifacts
+**/build
+**/dist
+
+# Logs
+**/*.log
+**/logs
+
+# Test coverage
+**/coverage
+
+# Cache directories
+**/.cache
+**/.npm
+**/.eslintcache
+
+# Frontend specific
+frontend/build
+frontend/node_modules
+frontend/.env*
+
+# Backend specific
+**/vendor
+**/composer.lock
+
+# Temporary files
+**/tmp
+**/temp

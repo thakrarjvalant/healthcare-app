@@ -73,6 +73,10 @@ a:hover {
   gap: 1rem;
 }
 
+.notification-bell {
+  margin-right: 8px;
+}
+
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -88,6 +92,47 @@ a:hover {
 /* Main content */
 .main-content {
   padding: 2rem 0;
+}
+
+/* Session Expired Screen */
+.session-expired {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.session-expired-content {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+}
+
+.session-expired-content h2 {
+  color: #dc3545;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.session-expired-content p {
+  color: #6c757d;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.session-expired-content .btn {
+  padding: 12px 24px;
+  font-size: 16px;
 }
 
 /* Dashboard */

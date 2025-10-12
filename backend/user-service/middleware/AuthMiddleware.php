@@ -11,10 +11,16 @@ class AuthMiddleware {
      */
     public static function verifyToken($token) {
         // In a real implementation, we would verify the JWT token
-        // For now, we'll return a placeholder user
-        if ($token) {
+        // For now, we'll return different users based on the token
+        if ($token === 'admin-token') {
             return [
                 'user_id' => 1,
+                'role' => 'admin',
+                'email' => 'admin@example.com'
+            ];
+        } elseif ($token) {
+            return [
+                'user_id' => 2,
                 'role' => 'patient',
                 'email' => 'john.doe@example.com'
             ];
@@ -65,7 +71,7 @@ class AuthMiddleware {
     /**
      * Require specific role for a request
      * @param array $request
-     * @param string $role
+     * @param string|array $role
      * @return array|null
      */
     public static function requireRole($request, $role) {
@@ -77,15 +83,19 @@ class AuthMiddleware {
         
         $userRole = $authResult['data']['user']['role'] ?? '';
         
-        if ($userRole !== $role && $userRole !== 'admin') {
-            return [
-                'status' => 403,
-                'data' => [
-                    'message' => 'Insufficient permissions'
-                ]
-            ];
+        // Convert single role to array for consistent handling
+        $requiredRoles = is_array($role) ? $role : [$role];
+        
+        // Check if user has required role or is admin (admin can access everything)
+        if (in_array($userRole, $requiredRoles) || $userRole === 'admin' || in_array('admin', $requiredRoles)) {
+            return $authResult;
         }
         
-        return $authResult;
+        return [
+            'status' => 403,
+            'data' => [
+                'message' => 'Insufficient permissions'
+            ]
+        ];
     }
 }

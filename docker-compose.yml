@@ -1,179 +1,203 @@
-version: '3.8'
-
 services:
-  # Database
-  database:
+  db:
     image: mysql:8.0
-    container_name: healthcare_db
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: healthcare_system
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: healthcare_db
       MYSQL_USER: healthcare_user
-      MYSQL_PASSWORD: healthcare_password
+      MYSQL_PASSWORD: your_strong_password
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./backend/database:/var/www/html/database
     ports:
       - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  db-init:
+    build: 
+      context: .
+      dockerfile: ./backend/database/init/Dockerfile
     volumes:
-      - db_data:/var/lib/mysql
-      - ./backend/database/init:/docker-entrypoint-initdb.d
-    networks:
-      - healthcare_network
-
-  # User Service
-  user-service:
-    build:
-      context: ./backend/user-service
-      dockerfile: Dockerfile
-    container_name: healthcare_user_service
-    ports:
-      - "8001:8000"
+      - ./backend/database:/var/www/html/database
+      - ./backend/database/init:/docker-entrypoint-init.d
     environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
     depends_on:
-      - database
-    networks:
-      - healthcare_network
+      - db
+    command: ["/docker-entrypoint-init.d/init-database.sh"]
 
-  # Appointment Service
-  appointment-service:
-    build:
-      context: ./backend/appointment-service
-      dockerfile: Dockerfile
-    container_name: healthcare_appointment_service
-    ports:
-      - "8002:8000"
-    environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
-    depends_on:
-      - database
-    networks:
-      - healthcare_network
-
-  # Clinical Service
-  clinical-service:
-    build:
-      context: ./backend/clinical-service
-      dockerfile: Dockerfile
-    container_name: healthcare_clinical_service
-    ports:
-      - "8003:8000"
-    environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
-    depends_on:
-      - database
-    networks:
-      - healthcare_network
-
-  # Notification Service
-  notification-service:
-    build:
-      context: ./backend/notification-service
-      dockerfile: Dockerfile
-    container_name: healthcare_notification_service
-    ports:
-      - "8004:8000"
-    environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
-    depends_on:
-      - database
-    networks:
-      - healthcare_network
-
-  # Billing Service
-  billing-service:
-    build:
-      context: ./backend/billing-service
-      dockerfile: Dockerfile
-    container_name: healthcare_billing_service
-    ports:
-      - "8005:8000"
-    environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
-    depends_on:
-      - database
-    networks:
-      - healthcare_network
-
-  # Storage Service
-  storage-service:
-    build:
-      context: ./backend/storage
-      dockerfile: Dockerfile
-    container_name: healthcare_storage_service
-    ports:
-      - "8006:8000"
-    environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
-    depends_on:
-      - database
-    networks:
-      - healthcare_network
-
-  # Admin UI
-  admin-ui:
-    build:
-      context: ./backend/admin-ui
-      dockerfile: Dockerfile
-    container_name: healthcare_admin_ui
-    ports:
-      - "8007:8000"
-    environment:
-      DB_HOST: database
-      DB_PORT: 3306
-      DB_NAME: healthcare_system
-      DB_USER: healthcare_user
-      DB_PASS: healthcare_password
-    depends_on:
-      - database
-    networks:
-      - healthcare_network
-
-  # Frontend
   frontend:
-    build:
+    build: 
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: healthcare_frontend
+      target: production
+      cache_from:
+        - healthcare-app-frontend:latest
+      args:
+        - REACT_APP_API_BASE_URL=http://localhost:8000/api
+        - REACT_APP_USER_SERVICE_BASE_URL=http://localhost:8000/api/users
+        - REACT_APP_ADMIN_UI_BASE_URL=http://localhost:8000/api
+        - REACT_APP_ENV=development
+    image: healthcare-app-frontend:latest
     ports:
       - "3000:3000"
     environment:
-      REACT_APP_API_BASE_URL: http://localhost:8000/api
+      - REACT_APP_API_BASE_URL=http://localhost:8000/api
+      - REACT_APP_USER_SERVICE_BASE_URL=http://localhost:8000/api/users
+      - REACT_APP_ADMIN_UI_BASE_URL=http://localhost:8000/api
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  api-gateway:
+    build: ./backend/api-gateway
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/api-gateway:/var/www/html
+      - ./backend/shared:/var/www/shared
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
     depends_on:
       - user-service
       - appointment-service
       - clinical-service
-      - notification-service
       - billing-service
+      - notification-service
       - storage-service
-    networks:
-      - healthcare_network
+      - db
+
+  user-service:
+    build: ./backend/user-service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend/user-service:/var/www/html
+      - ./backend/shared:/var/www/shared
+      - ./backend/database:/var/www/html/database
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
+
+  appointment-service:
+    build: ./backend/appointment-service
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./backend/appointment-service:/var/www/html
+      - ./backend/shared:/var/www/shared
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
+
+  clinical-service:
+    build: ./backend/clinical-service
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./backend/clinical-service:/var/www/html
+      - ./backend/shared:/var/www/shared
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
+
+  billing-service:
+    build: ./backend/billing-service
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./backend/billing-service:/var/www/html
+      - ./backend/shared:/var/www/shared
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
+
+  notification-service:
+    build: ./backend/notification-service
+    ports:
+      - "8004:8004"
+    volumes:
+      - ./backend/notification-service:/var/www/html
+      - ./backend/shared:/var/www/shared
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
+
+  storage-service:
+    build: ./backend/storage
+    ports:
+      - "8006:8006"
+    volumes:
+      - ./backend/storage:/var/www/html
+      - ./backend/shared:/var/www/shared
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
+
+  admin-ui:
+    build: ./backend/admin-ui
+    ports:
+      - "8007:8007"
+    volumes:
+      - ./backend/admin-ui:/var/www/html
+      - ./backend/shared:/var/www/shared
+      - ./backend/user-service:/var/www/user-service
+      - ./backend/database:/var/www/database
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthcare_db
+      - DB_USER=healthcare_user
+      - DB_PASS=your_strong_password
+    depends_on:
+      - db
 
 volumes:
-  db_data:
-
-networks:
-  healthcare_network:
-    driver: bridge
+  dbdata:

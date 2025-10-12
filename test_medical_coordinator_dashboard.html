@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Coordinator Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Medical Coordinator Dashboard Access Test</h1>
+        
+        <div class="step">
+            <h3>Step 1: Login</h3>
+            <p>To access the Medical Coordinator Dashboard:</p>
+            <ol>
+                <li>Go to <a href="http://localhost:3000/login" class="btn">Login Page</a></li>
+                <li>Use these credentials:
+                    <ul>
+                        <li><strong>Email:</strong> medical.coordinator@example.com</li>
+                        <li><strong>Password:</strong> password123</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Dashboard Access</h3>
+            <p>After successful login, you should be automatically redirected to the Medical Coordinator Dashboard.</p>
+            <p>If not, you can manually navigate to: <a href="http://localhost:3000/dashboard" class="btn">Dashboard</a></p>
+        </div>
+        
+        <div class="step success">
+            <h3>Expected Dashboard Features</h3>
+            <p>Once logged in as a Medical Coordinator, you should see:</p>
+            <ul>
+                <li>Welcome message with your name and role</li>
+                <li>"👥 Patient Assignment" card with "Assign Patients" button</li>
+                <li>"📋 Limited Patient History" card with "View Patient Records" button</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h3>Step 3: Test Features</h3>
+            <p>Try the following actions:</p>
+            <ol>
+                <li>Click "Assign Patients" button - should open a modal to assign patients to doctors</li>
+                <li>Click "View Patient Records" button - should open a modal showing patient history</li>
+            </ol>
+        </div>
+        
+        <div class="step error">
+            <h3>If Dashboard Doesn't Load</h3>
+            <p>Possible issues:</p>
+            <ul>
+                <li>Browser cache - try refreshing or opening in incognito mode</li>
+                <li>JavaScript errors - check browser console (F12)</li>
+                <li>Network issues - check if all services are running (docker ps)</li>
+                <li>Permission issues - verify user has correct role and permissions</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

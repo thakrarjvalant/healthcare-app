@@ -54,6 +54,15 @@ main {
   color: #343a40;
 }
 
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid #f5c6cb;
+}
+
 .form-container {
   max-width: 400px;
   margin: 0 auto;
@@ -95,4 +104,97 @@ main {
 
 .form-group button:hover {
   background-color: #0069d9;
+}
+
+/* Network Status Styles */
+.network-status {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.network-status.online {
+  background-color: #d4edda;
+  color: #155724;
+  border-bottom: 1px solid #c3e6cb;
+}
+
+.network-status.offline {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-bottom: 1px solid #f5c6cb;
+}
+
+.network-status-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.status-icon {
+  font-size: 1.2em;
+}
+
+/* Error Boundary Styles */
+.error-boundary {
+  padding: 20px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+  margin: 20px;
+}
+
+.error-boundary button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #721c24;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.error-boundary button:hover {
+  background-color: #5a151d;
+}
+
+/* Session Expired Styles */
+.session-expired {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.session-expired-content {
+  text-align: center;
+  padding: 40px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.session-expired-content h2 {
+  color: #343a40;
+  margin-bottom: 20px;
+}
+
+.session-expired-content p {
+  color: #6c757d;
+  margin-bottom: 30px;
+  font-size: 1.1em;
+}
+
+.session-expired-content .btn {
+  padding: 12px 24px;
+  font-size: 16px;
 }

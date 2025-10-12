@@ -41,60 +41,46 @@ healthcare-app/
 
 ## Setting Up the Backend
 
-### 1. Clone the Repository
+### Quick start with Docker Compose
 
 ```bash
-git clone <repository-url>
-cd healthcare-app
+# from repo root
+cp .env.example .env        # edit DB and service values as needed
+docker-compose up -d
+# check services
+docker-compose ps
+# show logs for a service (replace service name)
+docker-compose logs -f billing-service
 ```
 
-### 2. Set Up User Service
+### Run a single service locally (Laravel example)
 
-1. Navigate to the user service directory:
-   ```bash
-   cd backend/user-service
-   ```
+Use this pattern for each backend service (user-service, appointment-service, clinical-service, notification-service, billing-service, storage, admin-ui):
 
-2. Install PHP dependencies:
-   ```bash
-   composer install
-   ```
+```bash
+cd backend/<service-name>
+cp .env.example .env
+composer install
+# configure DB credentials in .env
+php artisan migrate
+php artisan serve --host=0.0.0.0 --port=<port-for-service>
+```
 
-3. Create a `.env` file with your database configuration:
-   ```bash
-   cp .env.example .env
-   ```
+Example (User Service):
 
-4. Update the `.env` file with your database credentials:
-   ```
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_NAME=healthcare_users
-   DB_USER=your_username
-   DB_PASS=your_password
-   ```
+```bash
+cd backend/user-service
+cp .env.example .env
+composer install
+php artisan migrate
+php artisan serve --host=0.0.0.0 --port=8001
+```
 
-5. Run database migrations:
-   ```bash
-   php artisan migrate
-   ```
+### Notes
 
-6. Start the development server:
-   ```bash
-   php artisan serve
-   ```
-
-### 3. Set Up Other Services
-
-Repeat similar steps for other services:
-- appointment-service
-- clinical-service
-- notification-service
-- billing-service
-- admin-ui
-- storage
-
-Each service may have specific setup requirements detailed in their respective README files.
+- Services expect a reachable MySQL instance for migrations.
+- If using Docker Compose, the compose file will provide network aliases; use those hostnames from service .env files.
+- For frontend local development set REACT_APP_API_BASE_URL to the gateway or service endpoints as appropriate.
 
 ## Setting Up the Frontend
 
@@ -113,6 +99,7 @@ npm install
 ### 3. Configure Environment Variables
 
 Create a `.env` file with the following content:
+
 ```
 REACT_APP_API_BASE_URL=http://localhost:8000/api
 ```

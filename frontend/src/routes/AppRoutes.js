@@ -4,6 +4,7 @@ import PatientDashboard from '../pages/patient/Dashboard';
 import DoctorDashboard from '../pages/doctor/Dashboard';
 import ReceptionistDashboard from '../pages/receptionist/Dashboard';
 import AdminDashboard from '../pages/admin/Dashboard';
+import MedicalCoordinatorDashboard from '../pages/medical-coordinator/Dashboard';
 import Login from '../components/user/Login';
 import Register from '../components/user/Register';
 
@@ -23,6 +24,7 @@ const AppRoutes = ({ user, onLogin }) => {
             user.role === 'doctor' ? <DoctorDashboard user={user} /> :
             user.role === 'receptionist' ? <ReceptionistDashboard user={user} /> :
             user.role === 'admin' ? <AdminDashboard user={user} /> :
+            user.role === 'medical_coordinator' ? <MedicalCoordinatorDashboard user={user} /> :
             <div>Unknown role</div>
           } />
           <Route path="/dashboard" element={
@@ -30,6 +32,7 @@ const AppRoutes = ({ user, onLogin }) => {
             user.role === 'doctor' ? <DoctorDashboard user={user} /> :
             user.role === 'receptionist' ? <ReceptionistDashboard user={user} /> :
             user.role === 'admin' ? <AdminDashboard user={user} /> :
+            user.role === 'medical_coordinator' ? <MedicalCoordinatorDashboard user={user} /> :
             <div>Unknown role</div>
           } />
           {/* Add more routes here as needed */}

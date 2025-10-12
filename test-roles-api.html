@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Roles API</title>
+</head>
+<body>
+    <h1>Test Roles API</h1>
+    <button onclick="testRolesApi()">Test Roles API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testRolesApi() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('http://localhost:8000/api/admin/roles', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer admin-token'
+                    }
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = '<h2>API Response:</h2><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                // Check if medical coordinator role exists
+                if (data.data && data.data.roles) {
+                    const hasMedicalCoordinator = data.data.roles.some(role => role.name === 'medical_coordinator');
+                    resultDiv.innerHTML += '<p>Has medical coordinator role: ' + hasMedicalCoordinator + '</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<h2>Error:</h2><pre>' + error.toString() + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

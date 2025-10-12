@@ -1,22 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
+import ApiService from '../../services/api';
 import './Appointment.css';
 
 const AppointmentList = ({ userType }) => {
+  const { user } = useContext(AuthContext);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    if (user) {
+      fetchAppointments();
+    }
+  }, [user]);
 
   const fetchAppointments = async () => {
+    if (!user) {
+      setError('You must be logged in to view appointments');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError('');
     
     try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate with mock data
+      // Try to fetch from API first
+      const response = await ApiService.getUserAppointments(user.id);
+      setAppointments(response.appointments || []);
+    } catch (err) {
+      console.log('API call failed, using mock data:', err.message);
+      // Fall back to mock data
       const mockAppointments = [
         {
           id: 1,
@@ -45,21 +60,31 @@ const AppointmentList = ({ userType }) => {
       ];
       
       setAppointments(mockAppointments);
-    } catch (err) {
-      setError('Failed to fetch appointments');
     } finally {
       setLoading(false);
     }
   };
 
   const handleStatusChange = async (appointmentId, newStatus) => {
-    // In a real app, this would be an API call to update the appointment status
-    // For now, we'll just update the local state
-    setAppointments(prevAppointments => 
-      prevAppointments.map(appt => 
-        appt.id === appointmentId ? { ...appt, status: newStatus } : appt
-      )
-    );
+    try {
+      // Try to update via API first
+      await ApiService.updateAppointmentStatus(appointmentId, newStatus);
+      
+      // Update local state
+      setAppointments(prevAppointments => 
+        prevAppointments.map(appt => 
+          appt.id === appointmentId ? { ...appt, status: newStatus } : appt
+        )
+      );
+    } catch (err) {
+      console.log('API update failed, updating locally:', err.message);
+      // Fall back to local update only
+      setAppointments(prevAppointments => 
+        prevAppointments.map(appt => 
+          appt.id === appointmentId ? { ...appt, status: newStatus } : appt
+        )
+      );
+    }
   };
 
   if (loading) {

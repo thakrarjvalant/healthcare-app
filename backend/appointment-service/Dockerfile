@@ -24,32 +24,10 @@ RUN chown -R www-data:www-data /var/www/html
 
 # Configure nginx to use php-fpm and listen on port 8000
 RUN rm -f /etc/nginx/conf.d/default.conf
-RUN bash -c 'cat > /etc/nginx/conf.d/default.conf <<"EOF"
-server {
-	listen 8000;
-	server_name _;
-	root /var/www/html;
-	index index.php index.html index.htm;
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-	location / {
-		try_files $uri $uri/ /index.php?$query_string;
-	}
-
-	location ~ \.php$ {
-		include fastcgi_params;
-		fastcgi_pass 127.0.0.1:9000;
-		fastcgi_index index.php;
-		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-	}
-
-	location ~ /\.ht {
-		deny all;
-	}
-}
-EOF'
-
-# Expose the same port as before
-EXPOSE 8000
+# Expose the correct port for appointment-service
+EXPOSE 8002
 
 # Start php-fpm in foreground and nginx (nginx in foreground keeps container alive)
 CMD ["sh", "-c", "php-fpm -F & nginx -g 'daemon off;'"]

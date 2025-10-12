@@ -51,10 +51,17 @@ class UserController {
      * @return array
      */
     public function login($request) {
+        error_log('Login request received');
+        error_log('Request data: ' . json_encode($request));
+        
         $email = $request['email'] ?? '';
         $password = $request['password'] ?? '';
         
+        error_log('Email: ' . $email);
+        error_log('Password: ' . ($password ? '****' : 'empty'));
+        
         if (empty($email) || empty($password)) {
+            error_log('Email or password is empty');
             return [
                 'status' => 400,
                 'data' => [
@@ -63,7 +70,9 @@ class UserController {
             ];
         }
         
+        error_log('Calling userService->login');
         $result = $this->userService->login($email, $password);
+        error_log('Login result: ' . json_encode($result));
         
         if ($result['success']) {
             return [
@@ -77,6 +86,57 @@ class UserController {
         } else {
             return [
                 'status' => 401,
+                'data' => [
+                    'message' => $result['message']
+                ]
+            ];
+        }
+    }
+    
+    /**
+     * Get all users
+     * @param array $request
+     * @return array
+     */
+    public function getAllUsers($request) {
+        $result = $this->userService->getAllUsers();
+        
+        if ($result['success']) {
+            return [
+                'status' => 200,
+                'data' => [
+                    'users' => $result['users']
+                ]
+            ];
+        } else {
+            return [
+                'status' => 500,
+                'data' => [
+                    'message' => $result['message']
+                ]
+            ];
+        }
+    }
+    
+    /**
+     * Get user by ID
+     * @param array $request
+     * @param int $userId
+     * @return array
+     */
+    public function getUserById($request, $userId) {
+        $result = $this->userService->getUserById($userId);
+        
+        if ($result['success']) {
+            return [
+                'status' => 200,
+                'data' => [
+                    'user' => $result['user']
+                ]
+            ];
+        } else {
+            return [
+                'status' => 404,
                 'data' => [
                     'message' => $result['message']
                 ]
