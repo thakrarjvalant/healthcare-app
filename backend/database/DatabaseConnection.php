@@ -17,9 +17,9 @@ class DatabaseConnection
     {
         $host = getenv('DB_HOST') ?: 'localhost';
         $port = getenv('DB_PORT') ?: 3306;
-        $dbname = getenv('DB_NAME') ?: 'healthcare_system';
-        $username = getenv('DB_USER') ?: 'root';
-        $password = getenv('DB_PASS') ?: '';
+        $dbname = getenv('DB_NAME') ?: 'healthcare_db';
+        $username = getenv('DB_USER') ?: 'healthcare_user';
+        $password = getenv('DB_PASS') ?: 'your_strong_password';
 
         try {
             $this->connection = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $username, $password);

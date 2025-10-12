@@ -44,11 +44,25 @@ class UserSeeder
                 'password' => password_hash('password123', PASSWORD_DEFAULT),
                 'role' => 'admin',
                 'verified' => true
+            ],
+            [
+                'name' => 'Medical Coordinator',
+                'email' => 'medical.coordinator@example.com',
+                'password' => password_hash('password123', PASSWORD_DEFAULT),
+                'role' => 'medical_coordinator',
+                'verified' => true
+            ],
+            [
+                'name' => 'Super Admin',
+                'email' => 'super.admin@example.com',
+                'password' => password_hash('password123', PASSWORD_DEFAULT),
+                'role' => 'super_admin',
+                'verified' => true
             ]
         ];
 
         foreach ($users as $user) {
-            $stmt = $this->db->prepare("INSERT INTO users (name, email, password, role, verified) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT IGNORE INTO users (name, email, password, role, verified) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([
                 $user['name'],
                 $user['email'],
@@ -61,6 +75,6 @@ class UserSeeder
 
     public function unseed()
     {
-        $this->db->exec("DELETE FROM users WHERE email IN ('john.doe@example.com', 'jane.smith@example.com', 'bob.receptionist@example.com', 'admin@example.com')");
+        $this->db->exec("DELETE FROM users WHERE email IN ('john.doe@example.com', 'jane.smith@example.com', 'bob.receptionist@example.com', 'admin@example.com', 'medical.coordinator@example.com', 'super.admin@example.com')");
     }
 }
