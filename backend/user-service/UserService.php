@@ -2,11 +2,19 @@
 
 namespace UserService;
 
+// Add JWT library import
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
 class UserService {
     private $db;
+    // Add JWT secret key
+    private $jwtSecret;
     
     public function __construct($database) {
         $this->db = $database;
+        // Use environment variable for JWT secret or fallback to default
+        $this->jwtSecret = getenv('JWT_SECRET') ?: 'healthcare_app_secret_key_2023';
     }
     
     /**
@@ -150,8 +158,52 @@ class UserService {
      * @return string
      */
     private function generateJWT($user) {
-        // Implementation would generate a proper JWT
-        // This is a placeholder
-        return "jwt_token_for_user_" . $user['id'];
+        // Create token payload
+        $payload = [
+            'user_id' => $user['id'],
+            'email' => $user['email'],
+            'role' => $user['role'],
+            'exp' => time() + (60 * 60 * 24), // Token expires in 24 hours
+            'iat' => time(), // Issued at
+            'iss' => 'healthcare-app' // Issuer
+        ];
+        
+        // Generate JWT token
+        return JWT::encode($payload, $this->jwtSecret, 'HS256');
+    }
+    
+    /**
+     * Validate JWT token
+     * @param string $token
+     * @return array|null
+     */
+    public function validateJWT($token) {
+        try {
+            // Decode JWT token
+            $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
+            
+            // Convert stdClass to array
+            $payload = json_decode(json_encode($decoded), true);
+            
+            // Verify user exists in database
+            $query = "SELECT id, name, email, role, verified, created_at, updated_at FROM users WHERE id = ? AND email = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$payload['user_id'], $payload['email']]);
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                return [
+                    'user_id' => $user['id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'role' => $user['role']
+                ];
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            error_log('JWT validation error: ' . $e->getMessage());
+            return null;
+        }
     }
 }

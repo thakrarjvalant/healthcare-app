@@ -196,11 +196,16 @@ class ApiService {
 
   // User Service methods
   static async register(userData) {
-    // Use user service base URL for registration
-    return this.fetch('/register', {
-      method: 'POST',
-      body: JSON.stringify(userData)
-    }, USER_SERVICE_BASE_URL);
+    try {
+      // Use user service base URL for registration
+      return await this.fetch('/register', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      }, USER_SERVICE_BASE_URL);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   }
 
   static async login(email, password) {
@@ -212,233 +217,439 @@ class ApiService {
       }, USER_SERVICE_BASE_URL);
       return response;
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   }
 
   static async getProfile() {
-    return this.fetch('/profile', {}, USER_SERVICE_BASE_URL);
+    try {
+      return await this.fetch('/me', {}, USER_SERVICE_BASE_URL);
+    } catch (error) {
+      console.error('Get profile error:', error);
+      throw error;
+    }
   }
 
   // User Role and Permission methods
   static async getUserRoles(userId) {
-    return this.fetch(`/admin/users/${userId}/roles`);
+    try {
+      return await this.fetch(`/admin/users/${userId}/roles`);
+    } catch (error) {
+      console.error('Get user roles error:', error);
+      throw error;
+    }
   }
 
   static async getRolePermissions(roleId) {
-    return this.fetch(`/admin/roles/${roleId}/permissions`);
+    try {
+      return await this.fetch(`/admin/roles/${roleId}/permissions`);
+    } catch (error) {
+      console.error('Get role permissions error:', error);
+      throw error;
+    }
   }
 
   // Appointment Service methods
   static async getAvailableSlots(doctorId, date) {
-    return this.fetch(`/appointments/availability?doctorId=${doctorId}&date=${date}`);
+    try {
+      return await this.fetch(`/appointments/availability?doctorId=${doctorId}&date=${date}`);
+    } catch (error) {
+      console.error('Get available slots error:', error);
+      throw error;
+    }
   }
 
   static async bookAppointment(appointmentData) {
-    return this.fetch('/appointments', {
-      method: 'POST',
-      body: JSON.stringify(appointmentData)
-    });
+    try {
+      return await this.fetch('/appointments', {
+        method: 'POST',
+        body: JSON.stringify(appointmentData)
+      });
+    } catch (error) {
+      console.error('Book appointment error:', error);
+      throw error;
+    }
   }
 
   static async getUserAppointments(userId) {
-    return this.fetch(`/appointments/user/${userId}`);
+    try {
+      return await this.fetch(`/appointments/user/${userId}`);
+    } catch (error) {
+      console.error('Get user appointments error:', error);
+      throw error;
+    }
   }
 
   static async updateAppointmentStatus(appointmentId, status) {
-    return this.fetch(`/appointments/${appointmentId}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status })
-    });
+    try {
+      return await this.fetch(`/appointments/${appointmentId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+    } catch (error) {
+      console.error('Update appointment status error:', error);
+      throw error;
+    }
   }
 
   // Clinical Service methods
   static async getMedicalHistory(patientId) {
-    return this.fetch(`/clinical/history/${patientId}`);
+    try {
+      return await this.fetch(`/clinical/history/${patientId}`);
+    } catch (error) {
+      console.error('Get medical history error:', error);
+      throw error;
+    }
   }
 
   static async getTreatmentPlans(patientId) {
-    return this.fetch(`/clinical/treatment-plans/${patientId}`);
+    try {
+      return await this.fetch(`/clinical/treatment-plans/${patientId}`);
+    } catch (error) {
+      console.error('Get treatment plans error:', error);
+      throw error;
+    }
   }
 
   // Notification Service methods
   static async getNotifications(userId) {
-    return this.fetch(`/notifications/user/${userId}`);
+    try {
+      return await this.fetch(`/notifications/user/${userId}`);
+    } catch (error) {
+      console.error('Get notifications error:', error);
+      throw error;
+    }
   }
 
   // Billing Service methods
   static async getInvoices(patientId) {
-    return this.fetch(`/billing/invoices/${patientId}`);
+    try {
+      return await this.fetch(`/billing/invoices/${patientId}`);
+    } catch (error) {
+      console.error('Get invoices error:', error);
+      throw error;
+    }
   }
 
   // Admin Service methods
   static async getUsers() {
-    return this.fetch('/admin/users');
+    try {
+      return await this.fetch('/admin/users');
+    } catch (error) {
+      console.error('Get users error:', error);
+      throw error;
+    }
   }
 
   static async createUser(userData) {
-    return this.fetch('/admin/users', {
-      method: 'POST',
-      body: JSON.stringify(userData)
-    });
+    try {
+      return await this.fetch('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
+    } catch (error) {
+      console.error('Create user error:', error);
+      throw error;
+    }
   }
 
   static async updateUser(userId, userData) {
-    return this.fetch(`/admin/users/${userId}`, {
-      method: 'PUT',
-      body: JSON.stringify(userData)
-    });
+    try {
+      return await this.fetch(`/admin/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(userData)
+      });
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
   }
 
   static async deleteUser(userId) {
-    return this.fetch(`/admin/users/${userId}`, {
-      method: 'DELETE'
-    });
+    try {
+      return await this.fetch(`/admin/users/${userId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      throw error;
+    }
   }
 
   // Dynamic RBAC Service methods
   static async getDynamicRoles() {
-    return this.fetch('/admin/roles');
+    try {
+      return await this.fetch('/admin/roles');
+    } catch (error) {
+      console.error('Get dynamic roles error:', error);
+      throw error;
+    }
   }
 
   static async getAllPermissions() {
-    return this.fetch('/admin/permissions');
+    try {
+      return await this.fetch('/admin/permissions');
+    } catch (error) {
+      console.error('Get all permissions error:', error);
+      throw error;
+    }
   }
 
   static async createDynamicRole(roleData) {
-    return this.fetch('/admin/roles', {
-      method: 'POST',
-      body: JSON.stringify(roleData)
-    });
+    try {
+      return await this.fetch('/admin/roles', {
+        method: 'POST',
+        body: JSON.stringify(roleData)
+      });
+    } catch (error) {
+      console.error('Create dynamic role error:', error);
+      throw error;
+    }
   }
 
   static async updateDynamicRole(roleId, roleData) {
-    return this.fetch(`/admin/roles/${roleId}`, {
-      method: 'PUT',
-      body: JSON.stringify(roleData)
-    });
+    try {
+      return await this.fetch(`/admin/roles/${roleId}`, {
+        method: 'PUT',
+        body: JSON.stringify(roleData)
+      });
+    } catch (error) {
+      console.error('Update dynamic role error:', error);
+      throw error;
+    }
   }
 
   static async deleteDynamicRole(roleId) {
-    return this.fetch(`/admin/roles/${roleId}`, {
-      method: 'DELETE'
-    });
+    try {
+      return await this.fetch(`/admin/roles/${roleId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Delete dynamic role error:', error);
+      throw error;
+    }
   }
 
   static async assignPermissionToRole(roleId, permissionId) {
-    return this.fetch(`/admin/roles/${roleId}/permissions`, {
-      method: 'POST',
-      body: JSON.stringify({ permission_id: permissionId })
-    });
+    try {
+      return await this.fetch(`/admin/roles/${roleId}/permissions`, {
+        method: 'POST',
+        body: JSON.stringify({ permission_id: permissionId })
+      });
+    } catch (error) {
+      console.error('Assign permission to role error:', error);
+      throw error;
+    }
   }
 
   static async removePermissionFromRole(roleId, permissionId) {
-    return this.fetch(`/admin/roles/${roleId}/permissions/${permissionId}`, {
-      method: 'DELETE'
-    });
+    try {
+      return await this.fetch(`/admin/roles/${roleId}/permissions/${permissionId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Remove permission from role error:', error);
+      throw error;
+    }
   }
 
   static async assignRoleToUser(userId, roleId) {
-    return this.fetch(`/admin/users/${userId}/roles`, {
-      method: 'POST',
-      body: JSON.stringify({ role_id: roleId })
-    });
+    try {
+      return await this.fetch(`/admin/users/${userId}/roles`, {
+        method: 'POST',
+        body: JSON.stringify({ role_id: roleId })
+      });
+    } catch (error) {
+      console.error('Assign role to user error:', error);
+      throw error;
+    }
   }
 
   static async removeRoleFromUser(userId, roleId) {
-    return this.fetch(`/admin/users/${userId}/roles/${roleId}`, {
-      method: 'DELETE'
-    });
+    try {
+      return await this.fetch(`/admin/users/${userId}/roles/${roleId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Remove role from user error:', error);
+      throw error;
+    }
   }
 
   static async getFeatureModules() {
-    return this.fetch('/admin/modules');
+    try {
+      return await this.fetch('/admin/modules');
+    } catch (error) {
+      console.error('Get feature modules error:', error);
+      throw error;
+    }
   }
 
   static async getRoleFeatureAccess(roleId) {
-    return this.fetch(`/admin/roles/${roleId}/features`);
+    try {
+      return await this.fetch(`/admin/roles/${roleId}/features`);
+    } catch (error) {
+      console.error('Get role feature access error:', error);
+      throw error;
+    }
   }
 
   static async updateRoleFeatureAccess(roleId, moduleId, accessLevel) {
-    return this.fetch(`/admin/roles/${roleId}/features`, {
-      method: 'POST',
-      body: JSON.stringify({ module_id: moduleId, access_level: accessLevel })
-    });
+    try {
+      return await this.fetch(`/admin/roles/${roleId}/features`, {
+        method: 'POST',
+        body: JSON.stringify({ module_id: moduleId, access_level: accessLevel })
+      });
+    } catch (error) {
+      console.error('Update role feature access error:', error);
+      throw error;
+    }
   }
 
   // Role user count method
   static async getRoleUserCount(roleId) {
-    return this.fetch(`/admin/roles/${roleId}/user-count`);
+    try {
+      return await this.fetch(`/admin/roles/${roleId}/user-count`);
+    } catch (error) {
+      console.error('Get role user count error:', error);
+      throw error;
+    }
   }
 
   // Escalation Management methods
   static async getEscalations(filters = {}) {
-    const queryParams = new URLSearchParams(filters).toString();
-    const url = `/admin/escalations${queryParams ? `?${queryParams}` : ''}`;
-    return this.fetch(url);
+    try {
+      const queryParams = new URLSearchParams(filters).toString();
+      const url = `/admin/escalations${queryParams ? `?${queryParams}` : ''}`;
+      return await this.fetch(url);
+    } catch (error) {
+      console.error('Get escalations error:', error);
+      throw error;
+    }
   }
 
   static async getEscalation(escalationId) {
-    return this.fetch(`/admin/escalations/${escalationId}`);
+    try {
+      return await this.fetch(`/admin/escalations/${escalationId}`);
+    } catch (error) {
+      console.error('Get escalation error:', error);
+      throw error;
+    }
   }
 
   static async createEscalation(escalationData) {
-    return this.fetch('/admin/escalations', {
-      method: 'POST',
-      body: JSON.stringify(escalationData)
-    });
+    try {
+      return await this.fetch('/admin/escalations', {
+        method: 'POST',
+        body: JSON.stringify(escalationData)
+      });
+    } catch (error) {
+      console.error('Create escalation error:', error);
+      throw error;
+    }
   }
 
   static async updateEscalation(escalationId, escalationData) {
-    return this.fetch(`/admin/escalations/${escalationId}`, {
-      method: 'PUT',
-      body: JSON.stringify(escalationData)
-    });
+    try {
+      return await this.fetch(`/admin/escalations/${escalationId}`, {
+        method: 'PUT',
+        body: JSON.stringify(escalationData)
+      });
+    } catch (error) {
+      console.error('Update escalation error:', error);
+      throw error;
+    }
   }
 
   static async deleteEscalation(escalationId) {
-    return this.fetch(`/admin/escalations/${escalationId}`, {
-      method: 'DELETE'
-    });
+    try {
+      return await this.fetch(`/admin/escalations/${escalationId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Delete escalation error:', error);
+      throw error;
+    }
   }
 
   static async addEscalationComment(escalationId, commentData) {
-    return this.fetch(`/admin/escalations/${escalationId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify(commentData)
-    });
+    try {
+      return await this.fetch(`/admin/escalations/${escalationId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify(commentData)
+      });
+    } catch (error) {
+      console.error('Add escalation comment error:', error);
+      throw error;
+    }
   }
 
   static async getEscalationCategories() {
-    return this.fetch('/admin/escalation-categories');
+    try {
+      return await this.fetch('/admin/escalation-categories');
+    } catch (error) {
+      console.error('Get escalation categories error:', error);
+      throw error;
+    }
   }
 
   static async getEscalationStatuses() {
-    return this.fetch('/admin/escalation-statuses');
+    try {
+      return await this.fetch('/admin/escalation-statuses');
+    } catch (error) {
+      console.error('Get escalation statuses error:', error);
+      throw error;
+    }
   }
 
   // Medical Coordinator Service methods
   static async getPatientsForAssignment() {
-    return this.fetch('/medical-coordinator/patients');
+    try {
+      return await this.fetch('/medical-coordinator/patients');
+    } catch (error) {
+      console.error('Get patients for assignment error:', error);
+      throw error;
+    }
   }
 
   static async getDoctorsForAssignment() {
-    return this.fetch('/medical-coordinator/doctors');
+    try {
+      return await this.fetch('/medical-coordinator/doctors');
+    } catch (error) {
+      console.error('Get doctors for assignment error:', error);
+      throw error;
+    }
   }
 
   static async assignPatientToDoctor(assignmentData) {
-    return this.fetch('/medical-coordinator/assignments', {
-      method: 'POST',
-      body: JSON.stringify(assignmentData)
-    });
+    try {
+      return await this.fetch('/medical-coordinator/assignments', {
+        method: 'POST',
+        body: JSON.stringify(assignmentData)
+      });
+    } catch (error) {
+      console.error('Assign patient to doctor error:', error);
+      throw error;
+    }
   }
 
   static async getPatientAssignmentHistory(patientId) {
-    return this.fetch(`/medical-coordinator/patients/${patientId}/assignments`);
+    try {
+      return await this.fetch(`/medical-coordinator/patients/${patientId}/assignments`);
+    } catch (error) {
+      console.error('Get patient assignment history error:', error);
+      throw error;
+    }
   }
 
   static async getPatientLimitedHistory(patientId) {
-    return this.fetch(`/medical-coordinator/patients/${patientId}/history`);
+    try {
+      return await this.fetch(`/medical-coordinator/patients/${patientId}/history`);
+    } catch (error) {
+      console.error('Get patient limited history error:', error);
+      throw error;
+    }
   }
 }
 

@@ -104,8 +104,56 @@ class DynamicRBACManager
      */
     public function getRoleFeatureAccess($roleId)
     {
-        // This method is no longer used as we've removed the role_feature_access table
-        return [];
+        $sql = "SELECT rfa.*, fm.name as module_name, fm.display_name as module_display_name
+                FROM role_feature_access rfa
+                JOIN feature_modules fm ON rfa.module_id = fm.id
+                WHERE rfa.role_id = ? AND rfa.is_active = 1 AND fm.is_active = 1
+                ORDER BY fm.name";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$roleId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Check if user can access a specific feature module
+     */
+    public function canAccessFeature($userId, $moduleName, $requiredAccessLevel = 'read')
+    {
+        // Get user roles
+        $userRoles = $this->getUserRoles($userId);
+        
+        if (empty($userRoles)) {
+            return false;
+        }
+        
+        // Define access level hierarchy
+        $accessLevels = [
+            'none' => 0,
+            'read' => 1,
+            'write' => 2,
+            'admin' => 3
+        ];
+        
+        $requiredLevel = $accessLevels[$requiredAccessLevel] ?? 1;
+        
+        // Check each role for feature access
+        foreach ($userRoles as $role) {
+            // Get role feature access
+            $featureAccess = $this->getRoleFeatureAccess($role['id']);
+            
+            // Check if role has access to the module
+            foreach ($featureAccess as $access) {
+                if ($access['module_name'] === $moduleName) {
+                    $roleLevel = $accessLevels[$access['access_level']] ?? 0;
+                    if ($roleLevel >= $requiredLevel) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -300,6 +348,69 @@ class DynamicRBACManager
                 'permission_id' => $permissionId
             ], null, $removedBy);
             
+            // Clear cache for users with this role
+            $this->clearRoleCache($roleId);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Assign feature access to role
+     */
+    public function assignFeatureAccessToRole($roleId, $moduleId, $accessLevel, $assignedBy)
+    {
+        // Validate access level
+        $validLevels = ['none', 'read', 'write', 'admin'];
+        if (!in_array($accessLevel, $validLevels)) {
+            return false;
+        }
+        
+        // Check if assignment already exists
+        $sql = "SELECT id FROM role_feature_access 
+                WHERE role_id = ? AND module_id = ? AND is_active = 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$roleId, $moduleId]);
+        
+        if ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            // Update existing assignment
+            $sql = "UPDATE role_feature_access 
+                    SET access_level = ?, granted_by = ?, updated_at = NOW()
+                    WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([$accessLevel, $assignedBy, $row['id']]);
+        } else {
+            // Create new assignment
+            $sql = "INSERT INTO role_feature_access 
+                    (role_id, module_id, access_level, granted_by)
+                    VALUES (?, ?, ?, ?)";
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([$roleId, $moduleId, $accessLevel, $assignedBy]);
+        }
+
+        if ($result) {
+            // Clear cache for users with this role
+            $this->clearRoleCache($roleId);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove feature access from role
+     */
+    public function removeFeatureAccessFromRole($roleId, $moduleId, $removedBy)
+    {
+        $sql = "UPDATE role_feature_access 
+                SET is_active = 0, revoked_at = NOW()
+                WHERE role_id = ? AND module_id = ? AND is_active = 1";
+        
+        $stmt = $this->db->prepare($sql);
+        $result = $stmt->execute([$roleId, $moduleId]);
+
+        if ($result) {
             // Clear cache for users with this role
             $this->clearRoleCache($roleId);
             return true;

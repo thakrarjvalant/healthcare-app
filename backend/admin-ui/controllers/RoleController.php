@@ -562,4 +562,127 @@ class RoleController {
             ];
         }
     }
+
+    /**
+     * Update feature access for a specific role
+     * @param array $request
+     * @return array
+     */
+    public function updateRoleFeatureAccess($request) {
+        // Require admin authentication
+        $authResult = AuthMiddleware::requireRole($request, ['admin', 'super_admin']);
+        if ($authResult['status'] !== 200) {
+            return $authResult;
+        }
+
+        $roleId = $request['params']['id'] ?? null;
+        $data = $request['body'] ?? [];
+        $moduleId = $data['module_id'] ?? null;
+        $accessLevel = $data['access_level'] ?? null;
+
+        if (!$roleId || !$moduleId || !$accessLevel) {
+            return [
+                'status' => 400,
+                'message' => 'Role ID, Module ID, and Access Level are required'
+            ];
+        }
+
+        try {
+            $userId = $request['user']['id'] ?? null;
+            $result = $this->rbacManager->assignFeatureAccessToRole($roleId, $moduleId, $accessLevel, $userId);
+
+            if ($result) {
+                return [
+                    'status' => 200,
+                    'message' => 'Feature access updated successfully'
+                ];
+            } else {
+                return [
+                    'status' => 400,
+                    'message' => 'Failed to update feature access'
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'status' => 500,
+                'message' => 'Failed to update feature access: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Remove feature access from a specific role
+     * @param array $request
+     * @return array
+     */
+    public function removeRoleFeatureAccess($request) {
+        // Require admin authentication
+        $authResult = AuthMiddleware::requireRole($request, ['admin', 'super_admin']);
+        if ($authResult['status'] !== 200) {
+            return $authResult;
+        }
+
+        $roleId = $request['params']['id'] ?? null;
+        $moduleId = $request['params']['module_id'] ?? null;
+
+        if (!$roleId || !$moduleId) {
+            return [
+                'status' => 400,
+                'message' => 'Role ID and Module ID are required'
+            ];
+        }
+
+        try {
+            $userId = $request['user']['id'] ?? null;
+            $result = $this->rbacManager->removeFeatureAccessFromRole($roleId, $moduleId, $userId);
+
+            if ($result) {
+                return [
+                    'status' => 200,
+                    'message' => 'Feature access removed successfully'
+                ];
+            } else {
+                return [
+                    'status' => 400,
+                    'message' => 'Failed to remove feature access'
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'status' => 500,
+                'message' => 'Failed to remove feature access: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get all feature modules
+     * @param array $request
+     * @return array
+     */
+    public function getFeatureModules($request) {
+        // Require admin authentication
+        $authResult = AuthMiddleware::requireRole($request, ['admin', 'super_admin']);
+        if ($authResult['status'] !== 200) {
+            return $authResult;
+        }
+
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM feature_modules WHERE is_active = 1 ORDER BY name");
+            $stmt->execute();
+            $modules = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            return [
+                'status' => 200,
+                'data' => [
+                    'modules' => $modules
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 500,
+                'message' => 'Failed to fetch feature modules: ' . $e->getMessage()
+            ];
+        }
+    }
 }

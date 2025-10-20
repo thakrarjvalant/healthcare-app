@@ -24,30 +24,55 @@ class AdminController {
             return $authResult;
         }
         
-        // In a real implementation, this would fetch actual dashboard data
-        $dashboardData = [
-            'total_users' => 1250,
-            'total_appointments' => 342,
-            'total_doctors' => 15,
-            'total_patients' => 1120,
-            'recent_activities' => [
-                [
-                    'user' => 'John Doe',
-                    'action' => 'Booked appointment',
-                    'time' => '2023-08-20 14:30:00'
-                ],
-                [
-                    'user' => 'Dr. Smith',
-                    'action' => 'Updated treatment plan',
-                    'time' => '2023-08-20 12:15:00'
+        try {
+            // Fetch actual dashboard data from the database
+            $totalUsersStmt = $this->db->getConnection()->prepare("SELECT COUNT(*) as count FROM users");
+            $totalUsersStmt->execute();
+            $totalUsers = $totalUsersStmt->fetch(\PDO::FETCH_ASSOC)['count'];
+            
+            $totalAppointmentsStmt = $this->db->getConnection()->prepare("SELECT COUNT(*) as count FROM appointments");
+            $totalAppointmentsStmt->execute();
+            $totalAppointments = $totalAppointmentsStmt->fetch(\PDO::FETCH_ASSOC)['count'];
+            
+            $totalDoctorsStmt = $this->db->getConnection()->prepare("SELECT COUNT(*) as count FROM users WHERE role = 'doctor'");
+            $totalDoctorsStmt->execute();
+            $totalDoctors = $totalDoctorsStmt->fetch(\PDO::FETCH_ASSOC)['count'];
+            
+            $totalPatientsStmt = $this->db->getConnection()->prepare("SELECT COUNT(*) as count FROM users WHERE role = 'patient'");
+            $totalPatientsStmt->execute();
+            $totalPatients = $totalPatientsStmt->fetch(\PDO::FETCH_ASSOC)['count'];
+            
+            // Fetch recent activities (simplified for now)
+            $recentActivitiesStmt = $this->db->getConnection()->prepare("
+                SELECT u.name as user, 'User activity' as action, u.updated_at as time 
+                FROM users u 
+                ORDER BY u.updated_at DESC 
+                LIMIT 2
+            ");
+            $recentActivitiesStmt->execute();
+            $recentActivities = $recentActivitiesStmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            $dashboardData = [
+                'total_users' => $totalUsers,
+                'total_appointments' => $totalAppointments,
+                'total_doctors' => $totalDoctors,
+                'total_patients' => $totalPatients,
+                'recent_activities' => $recentActivities
+            ];
+            
+            return [
+                'status' => 200,
+                'data' => $dashboardData
+            ];
+        } catch (\Exception $e) {
+            error_log('Failed to fetch dashboard data: ' . $e->getMessage());
+            return [
+                'status' => 500,
+                'data' => [
+                    'message' => 'Failed to fetch dashboard data'
                 ]
-            ]
-        ];
-        
-        return [
-            'status' => 200,
-            'data' => $dashboardData
-        ];
+            ];
+        }
     }
     
     /**
@@ -104,22 +129,60 @@ class AdminController {
         
         $userData = $request['body'] ?? [];
         
-        // In a real implementation, this would create a user in the database
-        $newUser = [
-            'id' => time(), // Simple ID generation for demo
-            'name' => $userData['name'] ?? '',
-            'email' => $userData['email'] ?? '',
-            'role' => $userData['role'] ?? 'patient',
-            'status' => 'active'
-        ];
-        
-        return [
-            'status' => 201,
-            'data' => [
-                'user' => $newUser,
-                'message' => 'User created successfully'
-            ]
-        ];
+        try {
+            // Validate required fields
+            if (empty($userData['name']) || empty($userData['email']) || empty($userData['password'])) {
+                return [
+                    'status' => 400,
+                    'data' => [
+                        'message' => 'Name, email, and password are required'
+                    ]
+                ];
+            }
+            
+            // Hash password
+            $hashedPassword = password_hash($userData['password'], PASSWORD_DEFAULT);
+            
+            // Insert user into database
+            $stmt = $this->db->getConnection()->prepare("
+                INSERT INTO users (name, email, password, role, verified, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, 1, NOW(), NOW())
+            ");
+            $stmt->execute([
+                $userData['name'],
+                $userData['email'],
+                $hashedPassword,
+                $userData['role'] ?? 'patient'
+            ]);
+            
+            $userId = $this->db->getConnection()->lastInsertId();
+            
+            // Fetch the created user
+            $userStmt = $this->db->getConnection()->prepare("
+                SELECT id, name, email, role, verified as status, created_at, updated_at 
+                FROM users 
+                WHERE id = ?
+            ");
+            $userStmt->execute([$userId]);
+            $newUser = $userStmt->fetch(\PDO::FETCH_ASSOC);
+            $newUser['status'] = $newUser['status'] ? 'active' : 'inactive';
+            
+            return [
+                'status' => 201,
+                'data' => [
+                    'user' => $newUser,
+                    'message' => 'User created successfully'
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log('Failed to create user: ' . $e->getMessage());
+            return [
+                'status' => 500,
+                'data' => [
+                    'message' => 'Failed to create user'
+                ]
+            ];
+        }
     }
     
     /**
@@ -137,22 +200,68 @@ class AdminController {
         $userId = $request['params']['id'] ?? null;
         $userData = $request['body'] ?? [];
         
-        // In a real implementation, this would update a user in the database
-        $updatedUser = [
-            'id' => $userId,
-            'name' => $userData['name'] ?? 'Unknown',
-            'email' => $userData['email'] ?? '',
-            'role' => $userData['role'] ?? 'patient',
-            'status' => $userData['status'] ?? 'active'
-        ];
+        if (!$userId) {
+            return [
+                'status' => 400,
+                'data' => [
+                    'message' => 'User ID is required'
+                ]
+            ];
+        }
         
-        return [
-            'status' => 200,
-            'data' => [
-                'user' => $updatedUser,
-                'message' => 'User updated successfully'
-            ]
-        ];
+        try {
+            // Check if user exists
+            $checkStmt = $this->db->getConnection()->prepare("SELECT id FROM users WHERE id = ?");
+            $checkStmt->execute([$userId]);
+            if (!$checkStmt->fetch()) {
+                return [
+                    'status' => 404,
+                    'data' => [
+                        'message' => 'User not found'
+                    ]
+                ];
+            }
+            
+            // Update user in database
+            $stmt = $this->db->getConnection()->prepare("
+                UPDATE users 
+                SET name = ?, email = ?, role = ?, verified = ?, updated_at = NOW() 
+                WHERE id = ?
+            ");
+            $stmt->execute([
+                $userData['name'] ?? '',
+                $userData['email'] ?? '',
+                $userData['role'] ?? 'patient',
+                isset($userData['status']) ? ($userData['status'] === 'active' ? 1 : 0) : 0,
+                $userId
+            ]);
+            
+            // Fetch the updated user
+            $userStmt = $this->db->getConnection()->prepare("
+                SELECT id, name, email, role, verified as status, created_at, updated_at 
+                FROM users 
+                WHERE id = ?
+            ");
+            $userStmt->execute([$userId]);
+            $updatedUser = $userStmt->fetch(\PDO::FETCH_ASSOC);
+            $updatedUser['status'] = $updatedUser['status'] ? 'active' : 'inactive';
+            
+            return [
+                'status' => 200,
+                'data' => [
+                    'user' => $updatedUser,
+                    'message' => 'User updated successfully'
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log('Failed to update user: ' . $e->getMessage());
+            return [
+                'status' => 500,
+                'data' => [
+                    'message' => 'Failed to update user'
+                ]
+            ];
+        }
     }
     
     /**
@@ -169,13 +278,47 @@ class AdminController {
         
         $userId = $request['params']['id'] ?? null;
         
-        // In a real implementation, this would delete a user from the database
-        return [
-            'status' => 200,
-            'data' => [
-                'message' => "User with ID {$userId} deleted successfully"
-            ]
-        ];
+        if (!$userId) {
+            return [
+                'status' => 400,
+                'data' => [
+                    'message' => 'User ID is required'
+                ]
+            ];
+        }
+        
+        try {
+            // Check if user exists
+            $checkStmt = $this->db->getConnection()->prepare("SELECT id FROM users WHERE id = ?");
+            $checkStmt->execute([$userId]);
+            if (!$checkStmt->fetch()) {
+                return [
+                    'status' => 404,
+                    'data' => [
+                        'message' => 'User not found'
+                    ]
+                ];
+            }
+            
+            // Delete user from database
+            $stmt = $this->db->getConnection()->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            
+            return [
+                'status' => 200,
+                'data' => [
+                    'message' => "User with ID {$userId} deleted successfully"
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log('Failed to delete user: ' . $e->getMessage());
+            return [
+                'status' => 500,
+                'data' => [
+                    'message' => 'Failed to delete user'
+                ]
+            ];
+        }
     }
     
     /**
@@ -190,7 +333,7 @@ class AdminController {
             return $authResult;
         }
         
-        // In a real implementation, this would update system settings
+        // In a real implementation, this would update system settings in the database
         $settings = $request['body'] ?? [];
         
         return [
@@ -214,31 +357,34 @@ class AdminController {
             return $authResult;
         }
         
-        // In a real implementation, this would fetch audit logs from the database
-        $logs = [
-            [
-                'timestamp' => '2023-08-25 14:30:15',
-                'user' => 'admin@example.com',
-                'role' => 'Admin',
-                'action' => 'User Created',
-                'details' => 'Created new doctor account: jane.smith@example.com',
-                'ip_address' => '192.168.1.100'
-            ],
-            [
-                'timestamp' => '2023-08-25 14:25:42',
-                'user' => 'jane.smith@example.com',
-                'role' => 'Doctor',
-                'action' => 'Login',
-                'details' => 'Successful login',
-                'ip_address' => '10.0.0.25'
-            ]
-        ];
-        
-        return [
-            'status' => 200,
-            'data' => [
-                'logs' => $logs
-            ]
-        ];
+        try {
+            // In a real implementation, this would fetch audit logs from the database
+            // For now, we'll return a simplified version
+            $logs = [
+                [
+                    'timestamp' => date('Y-m-d H:i:s'),
+                    'user' => 'admin@example.com',
+                    'role' => 'Admin',
+                    'action' => 'System Access',
+                    'details' => 'Accessed admin dashboard',
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+                ]
+            ];
+            
+            return [
+                'status' => 200,
+                'data' => [
+                    'logs' => $logs
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log('Failed to fetch audit logs: ' . $e->getMessage());
+            return [
+                'status' => 500,
+                'data' => [
+                    'message' => 'Failed to fetch audit logs'
+                ]
+            ];
+        }
     }
 }

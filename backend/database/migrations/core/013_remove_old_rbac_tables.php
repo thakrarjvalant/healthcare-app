@@ -18,7 +18,7 @@ class RemoveOldRbacTables
     {
         // Drop old RBAC tables that are no longer used
         $this->db->exec("DROP TABLE IF EXISTS rbac_audit_logs");
-        $this->db->exec("DROP TABLE IF EXISTS role_feature_access");
+        // Note: role_feature_access is still used and should not be dropped
     }
 
     public function down()

@@ -13,6 +13,56 @@ if (!defined('DEVELOPMENT_MODE')) {
     define('DEVELOPMENT_MODE', false);
 }
 
+// Validate JWT token and extract user information from database
+function validateJwtToken($token) {
+    error_log("Validating token: " . $token);
+    
+    // Connect to database to fetch user information
+    try {
+        // Get database connection
+        $db = \Database\DatabaseConnection::getInstance();
+        $pdo = $db->getConnection();
+        
+        // Import JWT library
+        require_once __DIR__ . '/../shared/vendor/autoload.php';
+        
+        // Validate JWT token
+        $jwtSecret = getenv('JWT_SECRET') ?: 'healthcare_app_secret_key_2023';
+        $payload = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($jwtSecret, 'HS256'));
+        
+        // Convert stdClass to array
+        $payload = json_decode(json_encode($payload), true);
+        
+        // Extract user ID from payload
+        $userId = $payload['user_id'];
+        error_log("Extracted user ID: " . $userId);
+        
+        // Fetch user information from database
+        error_log("Fetching user from database with ID: " . $userId);
+        $stmt = $pdo->prepare("SELECT id, name, email, role FROM users WHERE id = ? AND email = ?");
+        $stmt->execute([$userId, $payload['email']]);
+        $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if ($user) {
+            error_log("User found: " . json_encode($user));
+            return [
+                'id' => $user['id'],
+                'user_id' => $user['id'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'role' => $user['role']
+            ];
+        } else {
+            error_log("User not found in database");
+        }
+        
+        return null;
+    } catch (Exception $e) {
+        error_log("JWT validation error: " . $e->getMessage());
+        return null;
+    }
+}
+
 // Simple authentication middleware
 function authenticate() {
     // Try to get Authorization header from getallheaders()
@@ -43,39 +93,65 @@ function authenticate() {
         $token = substr($authHeader, 7);
         error_log("Token: " . $token);
         
-        // Handle the admin-token specifically
-        if ($token === 'admin-token') {
-            return [
-                'id' => 4,
-                'user_id' => 4,  // Admin User ID
-                'name' => 'Admin User',
-                'email' => 'admin@example.com',
-                'role' => 'admin'
-            ];
+        // Handle actual tokens - in a real implementation, you would validate the token
+        // For now, we'll check for specific tokens and return appropriate users
+        // In production, you would validate the JWT token and extract user info
+        
+        error_log("Calling validateJwtToken with token: " . $token);
+        // Validate JWT token and extract user information
+        $user = validateJwtToken($token);
+        error_log("validateJwtToken returned: " . json_encode($user));
+        if ($user) {
+            return $user;
         }
         
-        // Handle actual tokens - in a real implementation, you would validate the token
-        // For now, we'll accept any token and return the admin user
-        // In production, you would validate the JWT token and extract user info
-        return [
-            'id' => 4,
-            'user_id' => 4,  // Admin User ID
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'role' => 'admin'
-        ];
+        // Default to null for invalid tokens
+        return null;
     }
     
     // If no token provided, but this is for development, we can allow access
     // This is only for development purposes
     if (DEVELOPMENT_MODE) {
-        return [
-            'id' => 4,
-            'user_id' => 4,  // Admin User ID
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'role' => 'admin'
-        ];
+        // In development mode, fetch the first user with a medical_coordinator role from the database
+        try {
+            $db = \Database\DatabaseConnection::getInstance();
+            $pdo = $db->getConnection();
+            
+            $stmt = $pdo->prepare("SELECT id, name, email, role FROM users WHERE role = 'medical_coordinator' LIMIT 1");
+            $stmt->execute();
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                return [
+                    'id' => $user['id'],
+                    'user_id' => $user['id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'role' => $user['role']
+                ];
+            }
+            
+            // If no medical coordinator found, fall back to admin
+            $stmt = $pdo->prepare("SELECT id, name, email, role FROM users WHERE role = 'admin' LIMIT 1");
+            $stmt->execute();
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                return [
+                    'id' => $user['id'],
+                    'user_id' => $user['id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'role' => $user['role']
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("Development mode user fetch error: " . $e->getMessage());
+        }
+        
+        // If no users found with proper roles, return null to indicate authentication failure
+        // This is better than using hardcoded fallback values
+        return null;
     }
     
     return null;
@@ -113,14 +189,14 @@ if (empty($headers)) {
     }
 }
 
-// Get authenticated user
-$user = authenticate();
-
 // Create controller instances
 $adminController = new \AdminUI\Controllers\AdminController();
 $roleController = new \AdminUI\Controllers\RoleController();
 $escalationController = new \AdminUI\Controllers\EscalationController();
 $medicalCoordinatorController = new \AdminUI\Controllers\MedicalCoordinatorController();
+
+// Get authenticated user
+$user = authenticate();
 
 // Add user info to request
 $request = [
@@ -154,6 +230,9 @@ $routes = [
         '#^/admin/roles/(\d+)/features$#' => function($matches) use ($roleController, $request) { 
             $request['params']['id'] = $matches[1];
             return $roleController->getRoleFeatureAccess($request); 
+        },
+        '#^/admin/modules$#' => function() use ($roleController, $request) { 
+            return $roleController->getFeatureModules($request); 
         },
         '#^/admin/permissions$#' => function() use ($roleController, $request) { 
             return $roleController->getAllPermissions($request); 
@@ -201,6 +280,10 @@ $routes = [
             $request['params']['id'] = $matches[1];
             return $roleController->assignPermissionToRole($request); 
         },
+        '#^/admin/roles/(\d+)/features$#' => function($matches) use ($roleController, $request) { 
+            $request['params']['id'] = $matches[1];
+            return $roleController->updateRoleFeatureAccess($request); 
+        },
         '#^/admin/escalations$#' => function() use ($escalationController, $request) { 
             return $escalationController->createEscalation($request); 
         },
@@ -243,6 +326,11 @@ $routes = [
             $request['params']['id'] = $matches[1];
             $request['params']['permission_id'] = $matches[2];
             return $roleController->removePermissionFromRole($request); 
+        },
+        '#^/admin/roles/(\d+)/features/(\d+)$#' => function($matches) use ($roleController, $request) { 
+            $request['params']['id'] = $matches[1];
+            $request['params']['module_id'] = $matches[2];
+            return $roleController->removeRoleFeatureAccess($request); 
         },
         '#^/admin/escalations/(\d+)$#' => function($matches) use ($escalationController, $request) { 
             $request['params']['id'] = $matches[1];

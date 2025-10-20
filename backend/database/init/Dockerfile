@@ -16,8 +16,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy only the database directory which contains migrations and seeders
-COPY ./database /var/www/html/database
+# Copy the database directory which contains migrations and seeders
+# The database directory is one level up from the init directory
+COPY ../ /var/www/html/database
 
 # Install PHP dependencies for the database scripts
 WORKDIR /var/www/html/database

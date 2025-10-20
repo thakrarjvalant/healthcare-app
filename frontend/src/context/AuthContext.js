@@ -17,11 +17,6 @@ export const AuthProvider = ({ children }) => {
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [sessionId, setSessionId] = useState(null);
 
-  // Generate session ID
-  const generateSessionId = () => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
-
   // Update last activity timestamp
   const updateActivity = useCallback(() => {
     setLastActivity(Date.now());
@@ -40,12 +35,35 @@ export const AuthProvider = ({ children }) => {
     logout();
   }, []);
 
-  // Extend session
-  const extendSession = useCallback(() => {
-    updateActivity();
-    setSessionWarning(false);
-    setSessionExpired(false);
-  }, [updateActivity]);
+  // Extend session by validating with server
+  const extendSession = useCallback(async () => {
+    try {
+      // Validate token with server
+      const profileResponse = await ApiService.getProfile();
+      if (profileResponse && profileResponse.data && profileResponse.data.user) {
+        // Update user data and activity
+        setUser(prevUser => ({
+          ...prevUser,
+          ...profileResponse.data.user
+        }));
+        updateActivity();
+        setSessionWarning(false);
+        setSessionExpired(false);
+        // Update stored user data
+        localStorage.setItem('userData', JSON.stringify({
+          ...user,
+          ...profileResponse.data.user
+        }));
+        return true;
+      } else {
+        throw new Error('Invalid session');
+      }
+    } catch (error) {
+      console.error('Session extension failed:', error);
+      handleSessionTimeout();
+      return false;
+    }
+  }, [updateActivity, user, handleSessionTimeout]);
 
   // Session monitoring effect
   useEffect(() => {
@@ -56,7 +74,10 @@ export const AuthProvider = ({ children }) => {
       const timeLeft = SESSION_TIMEOUT - (now - lastActivity);
 
       if (timeLeft <= 0) {
-        handleSessionTimeout();
+        // Try to extend session before timing out
+        extendSession().catch(() => {
+          handleSessionTimeout();
+        });
       } else if (timeLeft <= WARNING_TIME && !sessionWarning) {
         setSessionWarning(true);
       }
@@ -64,7 +85,7 @@ export const AuthProvider = ({ children }) => {
 
     const interval = setInterval(checkSession, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [user, lastActivity, sessionWarning, handleSessionTimeout]);
+  }, [user, lastActivity, sessionWarning, extendSession, handleSessionTimeout]);
 
   // Activity listeners
   useEffect(() => {
@@ -87,40 +108,29 @@ export const AuthProvider = ({ children }) => {
   // Check if user is logged in on initial load
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const storedSessionId = localStorage.getItem('sessionId');
-    const storedLastActivity = localStorage.getItem('lastActivity');
     
-    if (token && storedSessionId && storedLastActivity) {
-      const lastActivityTime = parseInt(storedLastActivity);
-      const now = Date.now();
-      
-      // Check if session is still valid
-      if ((now - lastActivityTime) < SESSION_TIMEOUT) {
-        // Try to get user data from localStorage
-        const userData = localStorage.getItem('userData');
-        if (userData) {
-          try {
-            const parsedUser = JSON.parse(userData);
-            setUser(parsedUser);
-            setSessionId(storedSessionId);
-            setLastActivity(lastActivityTime);
-          } catch (err) {
-            console.log('Failed to parse user data, clearing localStorage');
+    if (token) {
+      // Validate token with server
+      const validateToken = async () => {
+        try {
+          const profileResponse = await ApiService.getProfile();
+          if (profileResponse && profileResponse.data && profileResponse.data.user) {
+            // Login with validated user data
+            await login(profileResponse.data.user, token);
+          } else {
             clearStoredAuth();
           }
-        } else {
+        } catch (err) {
+          console.log('Token validation failed, clearing auth data');
           clearStoredAuth();
         }
-      } else {
-        // Session expired
-        setSessionExpired(true);
-        clearStoredAuth();
-      }
-    } else if (token) {
-      // We have a token but missing session data, clear everything for security
-      clearStoredAuth();
+        setLoading(false);
+      };
+      
+      validateToken();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   // Auto-refresh token before expiration
@@ -128,17 +138,14 @@ export const AuthProvider = ({ children }) => {
     if (!user) return;
     
     const refreshInterval = setInterval(() => {
-      // In a real implementation, this would refresh the token with the server
-      // For now, we'll just update the last activity to extend the session
-      const token = localStorage.getItem('token');
-      if (token) {
-        updateActivity();
-        console.log('Session refreshed');
-      }
+      // Validate session with server
+      extendSession().catch(err => {
+        console.log('Session refresh failed:', err);
+      });
     }, SESSION_TIMEOUT - WARNING_TIME); // Refresh before warning time
     
     return () => clearInterval(refreshInterval);
-  }, [user, updateActivity]);
+  }, [user, extendSession]);
 
   // Clear stored authentication data
   const clearStoredAuth = () => {
@@ -214,7 +221,8 @@ export const AuthProvider = ({ children }) => {
         }
       });
       
-      const newSessionId = generateSessionId();
+      // Use server-generated session ID if available, otherwise generate client-side
+      const newSessionId = userData.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const now = Date.now();
       
       // Update state
@@ -248,7 +256,7 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated
   const isAuthenticated = () => {
-    return !!user;
+    return !!user && isSessionValid();
   };
 
   // Check if user has a specific role
@@ -264,7 +272,7 @@ export const AuthProvider = ({ children }) => {
   // Check if user has specific permission
   const hasPermission = (permission) => {
     if (!user || !user.permissions) return false;
-    return user.permissions.includes(permission) || user.role === 'admin' || user.role === 'super_admin';
+    return user.permissions.includes(permission);
   };
 
   // Check if user has any of the specified permissions

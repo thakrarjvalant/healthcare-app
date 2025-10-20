@@ -18,8 +18,13 @@ class MedicalCoordinatorController {
      * @return array
      */
     public function getPatients($request) {
+        // Debug logging
+        error_log('MedicalCoordinatorController::getPatients called');
+        error_log('Request user: ' . json_encode($request['user']));
+        
         // Require medical coordinator authentication
         $authResult = AuthMiddleware::requireRole($request, 'medical_coordinator');
+        error_log('Auth result: ' . json_encode($authResult));
         if ($authResult['status'] !== 200) {
             return $authResult;
         }
@@ -153,6 +158,19 @@ class MedicalCoordinatorController {
                 ];
             }
             
+            // Get the authenticated user ID from the auth result
+            $userId = $authResult['data']['user']['user_id'] ?? null;
+            
+            // If we don't have a user ID, return an error
+            if (!$userId) {
+                return [
+                    'status' => 401,
+                    'data' => [
+                        'message' => 'Unable to identify authenticated user'
+                    ]
+                ];
+            }
+            
             // Deactivate any existing active assignments for this patient
             $deactivateStmt = $this->db->getConnection()->prepare("
                 UPDATE patient_doctor_assignments 
@@ -162,7 +180,6 @@ class MedicalCoordinatorController {
             $deactivateStmt->execute([$patientId]);
             
             // Create new assignment
-            $userId = $authResult['data']['user']['user_id'] ?? 1; // Fallback to 1 if user_id not found
             $stmt = $this->db->getConnection()->prepare("
                 INSERT INTO patient_doctor_assignments (patient_id, doctor_id, assigned_by, notes) 
                 VALUES (?, ?, ?, ?)

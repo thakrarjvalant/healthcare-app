@@ -2,16 +2,15 @@
 
 namespace NotificationService\Controllers;
 
-use NotificationService\NotificationService;
-use UserService\Middleware\AuthMiddleware;
+use Database\DatabaseConnection;
 
 class NotificationController {
-    private $notificationService;
-    
-    public function __construct(NotificationService $notificationService) {
-        $this->notificationService = $notificationService;
+    private $db;
+
+    public function __construct() {
+        $this->db = DatabaseConnection::getInstance();
     }
-    
+
     /**
      * Get notifications for the authenticated user
      * @param array $request
@@ -216,12 +215,12 @@ class NotificationController {
      */
     private function getNotificationById($notificationId) {
         // In a real implementation, this would fetch from the database
-        // For now, we'll return a placeholder
+        // For now, we'll return a placeholder without hardcoded user ID
         return [
             'success' => true,
             'notification' => [
                 'id' => $notificationId,
-                'user_id' => 1, // Placeholder user ID
+                'user_id' => null, // This should be fetched from the database in a real implementation
                 'type' => 'appointment',
                 'title' => 'Appointment Reminder',
                 'message' => 'You have an appointment tomorrow at 10:00 AM',

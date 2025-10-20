@@ -150,7 +150,7 @@ class UserController {
      * @return array
      */
     public function getProfile($request) {
-        // Extract user ID from token (simplified)
+        // Extract user ID from token
         $userId = $this->getUserIdFromToken($request['token'] ?? '');
         
         if (!$userId) {
@@ -162,19 +162,24 @@ class UserController {
             ];
         }
         
-        // In a real implementation, we would fetch the user from the database
-        // For now, we'll return a placeholder
-        return [
-            'status' => 200,
-            'data' => [
-                'user' => [
-                    'id' => $userId,
-                    'name' => 'John Doe',
-                    'email' => 'john.doe@example.com',
-                    'role' => 'patient'
+        // Fetch user from database using UserService
+        $result = $this->userService->getUserById($userId);
+        
+        if ($result['success']) {
+            return [
+                'status' => 200,
+                'data' => [
+                    'user' => $result['user']
                 ]
-            ]
-        ];
+            ];
+        } else {
+            return [
+                'status' => 404,
+                'data' => [
+                    'message' => 'User not found'
+                ]
+            ];
+        }
     }
     
     /**
@@ -183,8 +188,20 @@ class UserController {
      * @return int|null
      */
     private function getUserIdFromToken($token) {
-        // In a real implementation, we would decode the JWT token
-        // For now, we'll return a placeholder
-        return $token ? 1 : null;
+        if (!$token) {
+            return null;
+        }
+        
+        // Remove "Bearer " prefix if present
+        $token = str_replace('Bearer ', '', $token);
+        
+        // Validate JWT token using UserService
+        $userData = $this->userService->validateJWT($token);
+        
+        if ($userData) {
+            return $userData['user_id'];
+        }
+        
+        return null;
     }
 }

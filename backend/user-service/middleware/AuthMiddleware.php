@@ -2,6 +2,10 @@
 
 namespace UserService\Middleware;
 
+// Import UserService for JWT validation
+use UserService\UserService;
+use Database\DatabaseConnection;
+
 class AuthMiddleware {
     
     /**
@@ -10,23 +14,17 @@ class AuthMiddleware {
      * @return array|null
      */
     public static function verifyToken($token) {
-        // In a real implementation, we would verify the JWT token
-        // For now, we'll return different users based on the token
-        if ($token === 'admin-token') {
-            return [
-                'user_id' => 1,
-                'role' => 'admin',
-                'email' => 'admin@example.com'
-            ];
-        } elseif ($token) {
-            return [
-                'user_id' => 2,
-                'role' => 'patient',
-                'email' => 'john.doe@example.com'
-            ];
+        // Validate JWT token using UserService
+        try {
+            $db = DatabaseConnection::getInstance();
+            $userService = new UserService($db->getConnection());
+            $user = $userService->validateJWT($token);
+            
+            return $user;
+        } catch (\Exception $e) {
+            error_log('Token validation error: ' . $e->getMessage());
+            return null;
         }
-        
-        return null;
     }
     
     /**
@@ -75,6 +73,33 @@ class AuthMiddleware {
      * @return array|null
      */
     public static function requireRole($request, $role) {
+        // Check if user is already authenticated and passed in the request
+        if (isset($request['user']) && !empty($request['user'])) {
+            $user = $request['user'];
+            $userRole = $user['role'] ?? '';
+            
+            // Convert single role to array for consistent handling
+            $requiredRoles = is_array($role) ? $role : [$role];
+            
+            // Check if user has required role
+            if (in_array($userRole, $requiredRoles)) {
+                return [
+                    'status' => 200,
+                    'data' => [
+                        'user' => $user
+                    ]
+                ];
+            }
+            
+            return [
+                'status' => 403,
+                'data' => [
+                    'message' => 'Insufficient permissions'
+                ]
+            ];
+        }
+        
+        // If user is not already authenticated, authenticate using headers
         $authResult = self::requireAuth($request);
         
         if ($authResult['status'] !== 200) {
@@ -86,8 +111,8 @@ class AuthMiddleware {
         // Convert single role to array for consistent handling
         $requiredRoles = is_array($role) ? $role : [$role];
         
-        // Check if user has required role or is admin (admin can access everything)
-        if (in_array($userRole, $requiredRoles) || $userRole === 'admin' || in_array('admin', $requiredRoles)) {
+        // Check if user has required role
+        if (in_array($userRole, $requiredRoles)) {
             return $authResult;
         }
         

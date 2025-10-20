@@ -26,13 +26,14 @@ error_log('API Gateway request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER[
 // Place this file where your webserver/PHP-FPM can execute it.
 
 $routes = [
-    '/api/users'         => 'http://user-service:8001',
-    '/api/appointments'  => 'http://appointment-service:8002',
-    '/api/clinical'      => 'http://clinical-service:8003',
-    '/api/notifications' => 'http://notification-service:8004',
-    '/api/billing'       => 'http://billing-service:8005',
-    '/api/storage'       => 'http://storage-service:8006',
-    '/api/admin'         => 'http://admin-ui:8007',
+    '/api/users'              => 'http://user-service:8001',
+    '/api/appointments'       => 'http://appointment-service:8002',
+    '/api/clinical'           => 'http://clinical-service:8003',
+    '/api/notifications'      => 'http://notification-service:8004',
+    '/api/billing'            => 'http://billing-service:8005',
+    '/api/storage'            => 'http://storage-service:8006',
+    '/api/admin'              => 'http://admin-ui:8007',
+    '/api/medical-coordinator' => 'http://admin-ui:8007',
 ];
 
 // Health endpoint
@@ -65,8 +66,8 @@ $service_url = null;
 foreach ($routes as $route => $base_url) {
     error_log("Checking route: " . $route . " against path: " . $path);
     if (strpos($path, $route) === 0) {
-        // For the admin route, we need to strip the /api prefix
-        if ($route === '/api/admin') {
+        // For the admin and medical-coordinator routes, we need to strip the /api prefix
+        if ($route === '/api/admin' || $route === '/api/medical-coordinator') {
             // Strip /api prefix and send the remaining path to the admin service
             $remaining_path = substr($path, 4); // Remove '/api' prefix
             $service_url = $base_url . $remaining_path;
