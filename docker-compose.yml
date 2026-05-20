@@ -33,8 +33,10 @@ services:
       - DB_USER=healthcare_user
       - DB_PASS=your_strong_password
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: ["/docker-entrypoint-init.d/init-database.sh"]
+    restart: "no"
 
   frontend:
     build: 

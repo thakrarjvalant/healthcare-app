@@ -24,6 +24,8 @@ class AdminController {
             return $authResult;
         }
         
+
+        
         try {
             // Fetch actual dashboard data from the database
             $totalUsersStmt = $this->db->getConnection()->prepare("SELECT COUNT(*) as count FROM users");
@@ -86,6 +88,8 @@ class AdminController {
         if ($authResult['status'] !== 200) {
             return $authResult;
         }
+        
+
         
         try {
             // Fetch all users from the database

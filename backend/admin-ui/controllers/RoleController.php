@@ -27,6 +27,8 @@ class RoleController {
             return $authResult;
         }
 
+
+
         try {
             $stmt = $this->db->prepare("SELECT * FROM dynamic_roles WHERE is_active = 1 ORDER BY name");
             $stmt->execute();
@@ -375,6 +377,8 @@ class RoleController {
             return $authResult;
         }
 
+
+
         try {
             $permissions = $this->rbacManager->getAllPermissions();
 
@@ -667,6 +671,8 @@ class RoleController {
             return $authResult;
         }
 
+
+
         try {
             $stmt = $this->db->prepare("SELECT * FROM feature_modules WHERE is_active = 1 ORDER BY name");
             $stmt->execute();
@@ -681,7 +687,9 @@ class RoleController {
         } catch (\Exception $e) {
             return [
                 'status' => 500,
-                'message' => 'Failed to fetch feature modules: ' . $e->getMessage()
+                'data' => [
+                    'message' => 'Failed to fetch feature modules: ' . $e->getMessage()
+                ]
             ];
         }
     }

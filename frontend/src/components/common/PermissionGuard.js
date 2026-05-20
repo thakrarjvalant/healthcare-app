@@ -10,6 +10,17 @@ const PermissionGuard = ({
 }) => {
   const { user } = useContext(AuthContext);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('PermissionGuard check:', {
+      requiredRole,
+      requiredPermissions,
+      userRole: user?.role,
+      userPermissions: user?.permissions,
+      checkAny
+    });
+  }, [requiredRole, requiredPermissions, user, checkAny]);
+
   const hasRole = (role) => {
     if (!user || !user.role) return false;
     return user.role === role || user.role === 'admin'; // Admin has all roles
@@ -17,7 +28,9 @@ const PermissionGuard = ({
 
   const hasPermission = (permission) => {
     if (!user || !user.permissions) return false;
-    return user.permissions.includes(permission) || user.role === 'admin';
+    const result = user.permissions.includes(permission) || user.role === 'admin';
+    console.log(`Checking permission '${permission}':`, result, '(user has:', user.permissions, ')');
+    return result;
   };
 
   const hasRequiredPermissions = () => {
@@ -32,11 +45,13 @@ const PermissionGuard = ({
 
   // Check role if specified
   if (requiredRole && !hasRole(requiredRole)) {
+    console.log('Role check failed:', requiredRole, user?.role);
     return fallback;
   }
 
   // Check permissions if specified
   if (requiredPermissions.length > 0 && !hasRequiredPermissions()) {
+    console.log('Permission check failed:', requiredPermissions, user?.permissions);
     return fallback;
   }
 

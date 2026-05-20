@@ -29,6 +29,8 @@ class MedicalCoordinatorController {
             return $authResult;
         }
         
+
+        
         try {
             // Fetch all patients from the database
             $stmt = $this->db->getConnection()->prepare("
@@ -69,6 +71,8 @@ class MedicalCoordinatorController {
         if ($authResult['status'] !== 200) {
             return $authResult;
         }
+        
+
         
         try {
             // Fetch all doctors from the database

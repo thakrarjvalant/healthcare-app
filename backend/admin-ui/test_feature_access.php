@@ -35,7 +35,9 @@ $featureAccess = $rbacManager->getRoleFeatureAccess($superAdminRoleId);
 
 echo "Feature access for super admin:\n";
 foreach ($featureAccess as $access) {
-    echo "  - {$access['name']}: {$access['access_level']}\n";
+    // Print all keys to see what's available
+    echo "  Keys: " . implode(', ', array_keys($access)) . "\n";
+    echo "  - Module: {$access['module_name']}, Access Level: {$access['access_level']}\n";
 }
 
 echo "\n✅ Direct RBAC manager test completed successfully!\n";
@@ -58,7 +60,7 @@ if ($response['status'] === 200) {
     if (isset($response['data']['feature_access'])) {
         echo "Feature access count: " . count($response['data']['feature_access']) . "\n";
         foreach ($response['data']['feature_access'] as $access) {
-            echo "  - {$access['name']}: {$access['access_level']}\n";
+            echo "  - Module: {$access['module_name']}, Access Level: {$access['access_level']}\n";
         }
     }
 } else {

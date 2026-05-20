@@ -107,7 +107,7 @@ class DynamicRBACManager
         $sql = "SELECT rfa.*, fm.name as module_name, fm.display_name as module_display_name
                 FROM role_feature_access rfa
                 JOIN feature_modules fm ON rfa.module_id = fm.id
-                WHERE rfa.role_id = ? AND rfa.is_active = 1 AND fm.is_active = 1
+                WHERE rfa.role_id = ? AND rfa.is_active = 1 AND fm.is_enabled = 1
                 ORDER BY fm.name";
         
         $stmt = $this->db->prepare($sql);

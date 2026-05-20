@@ -9,6 +9,14 @@ ini_set('display_startup_errors', 0);
 ini_set('html_errors', 0);
 ini_set('log_errors', 1);
 
+// Helper function to send JSON response
+function jsonResponse($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -25,15 +33,16 @@ error_log('API Gateway request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER[
 // Map incoming /api/... prefixes to backend service origins using Docker service names.
 // Place this file where your webserver/PHP-FPM can execute it.
 
+// Order matters! More specific routes should come before general ones
 $routes = [
-    '/api/users'              => 'http://user-service:8001',
-    '/api/appointments'       => 'http://appointment-service:8002',
-    '/api/clinical'           => 'http://clinical-service:8003',
-    '/api/notifications'      => 'http://notification-service:8004',
-    '/api/billing'            => 'http://billing-service:8005',
-    '/api/storage'            => 'http://storage-service:8006',
-    '/api/admin'              => 'http://admin-ui:8007',
-    '/api/medical-coordinator' => 'http://admin-ui:8007',
+    '/api/medical-coordinator' => 'http://localhost:8007',
+    '/api/admin'              => 'http://localhost:8007',
+    '/api/users'              => 'http://localhost:8001',
+    '/api/appointments'       => 'http://localhost:8002',
+    '/api/clinical'           => 'http://localhost:8003',
+    '/api/notifications'      => 'http://localhost:8004',
+    '/api/billing'            => 'http://localhost:8005',
+    '/api/storage'            => 'http://localhost:8006',
 ];
 
 // Health endpoint
@@ -66,10 +75,10 @@ $service_url = null;
 foreach ($routes as $route => $base_url) {
     error_log("Checking route: " . $route . " against path: " . $path);
     if (strpos($path, $route) === 0) {
-        // For the admin and medical-coordinator routes, we need to strip the /api prefix
+        // For the admin and medical-coordinator routes, we need to send the remaining path to the admin service
         if ($route === '/api/admin' || $route === '/api/medical-coordinator') {
-            // Strip /api prefix and send the remaining path to the admin service
-            $remaining_path = substr($path, 4); // Remove '/api' prefix
+            // For these routes, we need to remove the specific route prefix and send the remaining path to the admin service
+            $remaining_path = substr($path, strlen($route));
             $service_url = $base_url . $remaining_path;
         } else {
             // For other routes, get the remaining path after the route

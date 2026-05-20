@@ -63,6 +63,7 @@ class MasterSeeder
             'UserSeeder' => '👥 Seeding Users (Admin, Doctors, Patients, Receptionists)',
             'DynamicRBACSeeder' => '🎭 Seeding Dynamic RBAC System',
             'UserDynamicRolesSeeder' => '👤 Seeding User-Dynamic Role Assignments',
+            'RoleFeatureAccessSeeder' => '🎯 Seeding Role-Feature Access Assignments',
             'SystemConfigSeeder' => '⚙️ Seeding System Configuration',
             'AppointmentSeeder' => '📅 Seeding Appointments',
             'MedicalRecordSeeder' => '🏥 Seeding Medical Records & Clinical Data',
@@ -164,6 +165,7 @@ class MasterSeeder
             'MedicalRecordSeeder', 
             'AppointmentSeeder',
             'SystemConfigSeeder',
+            'RoleFeatureAccessSeeder',
             'UserDynamicRolesSeeder',
             'DynamicRBACSeeder',
             'UserSeeder'

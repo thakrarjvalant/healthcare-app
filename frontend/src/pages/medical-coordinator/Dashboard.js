@@ -18,6 +18,14 @@ const MedicalCoordinatorDashboard = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Debugging: Log user data to console
+  useEffect(() => {
+    console.log('Medical Coordinator User Data:', user);
+    console.log('User Permissions:', user?.permissions);
+    console.log('Has assign_clinician permission:', hasPermission('patients.assign_clinician'));
+    console.log('Has limited_history permission:', hasPermission('patients.limited_history'));
+  }, [user, hasPermission]);
+
   const handleRefreshPermissions = async () => {
     try {
       await refreshPermissions();
@@ -136,6 +144,13 @@ const MedicalCoordinatorDashboard = ({ user }) => {
         <h2>Welcome, {user.name}!</h2>
         <p>Email: {user.email}</p>
         <p>Role: {user.role}</p>
+        {/* Debug information */}
+        <div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', borderRadius: '4px'}}>
+          <p><strong>Debug Info:</strong></p>
+          <p>Permissions Count: {user?.permissions?.length || 0}</p>
+          <p>Has assign permission: {hasPermission('patients.assign_clinician') ? '✅ Yes' : '❌ No'}</p>
+          <p>Has history permission: {hasPermission('patients.limited_history') ? '✅ Yes' : '❌ No'}</p>
+        </div>
         <p className="role-description">
           Medical Coordinator - Assign patients to clinicians and access limited patient histories
         </p>
