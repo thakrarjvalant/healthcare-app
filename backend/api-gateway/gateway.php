@@ -52,6 +52,28 @@ if (php_sapi_name() !== 'cli' && (($_SERVER['REQUEST_METHOD'] === 'GET') && ($_S
     exit;
 }
 
+// Handle favicon.ico - return 204 No Content to avoid proxy errors
+if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/favicon.ico') {
+    http_response_code(204);
+    exit;
+}
+
+// /api/currentUser -- proxy to user service /me
+if (php_sapi_name() !== 'cli' && parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/api/currentUser') {
+    $headers = function_exists('getallheaders') ? getallheaders() : [];
+    $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    $ch2 = curl_init('http://localhost:8001/me');
+    curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch2, CURLOPT_HTTPHEADER, ['Authorization: ' . $authHeader, 'Content-Type: application/json']);
+    $body2 = curl_exec($ch2);
+    $code2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+    curl_close($ch2);
+    http_response_code($code2);
+    header('Content-Type: application/json');
+    echo $body2;
+    exit;
+}
+
 $request_uri = $_SERVER['REQUEST_URI'];
 $path = parse_url($request_uri, PHP_URL_PATH);
 

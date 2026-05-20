@@ -138,38 +138,13 @@ $routes = [
             $result = $userController->getUserById($request, $userId);
             jsonResponse($result['data'], $result['status']);
         },
-        '#^/me$#' => function() use ($userController, $useMockDatabase, $mockDb) { 
-            // Get current user profile
-            if ($useMockDatabase) {
-                // Extract user ID from Authorization header (simplified)
-                $headers = getallheaders();
-                $authHeader = $headers['Authorization'] ?? '';
-                
-                if (strpos($authHeader, 'Bearer ') === 0) {
-                    $token = substr($authHeader, 7);
-                    $decoded = json_decode(base64_decode($token), true);
-                    
-                    if ($decoded && isset($decoded['user_id'])) {
-                        $user = $mockDb->getUserById($decoded['user_id']);
-                        if ($user) {
-                            jsonResponse([
-                                'message' => 'Profile retrieved successfully',
-                                'user' => [
-                                    'id' => $user['id'],
-                                    'name' => $user['name'],
-                                    'email' => $user['email'],
-                                    'role' => $user['role']
-                                ]
-                            ], 200);
-                        }
-                    }
-                }
-                jsonResponse(['message' => 'Unauthorized'], 401);
-            } else {
-                $request = []; // In a real implementation, this would contain request data like headers with auth token
-                $result = $userController->getProfile($request);
-                jsonResponse($result['data'], $result['status']);
-            }
+        '#^/me$#' => function() use ($userController) { 
+            // Get current user profile - extract token from Authorization header
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+            $request = ['token' => $authHeader];
+            $result = $userController->getProfile($request);
+            jsonResponse($result['data'], $result['status']);
         },
     ],
     'PUT' => [

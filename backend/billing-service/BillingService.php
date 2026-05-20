@@ -23,7 +23,7 @@ class BillingService {
         }
         
         // Create invoice record
-        $query = "INSERT INTO invoices (patient_id, appointment_id, amount, status, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO invoices (patient_id, appointment_id, amount, status, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
         $stmt = $this->db->prepare($query);
         $result = $stmt->execute([
             $invoiceData['patient_id'],
@@ -35,7 +35,7 @@ class BillingService {
         ]);
         
         if ($result) {
-            $invoiceId = $this->db->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC); $1 = $row['id'] ?? null;
             return ['success' => true, 'invoice_id' => $invoiceId];
         }
         

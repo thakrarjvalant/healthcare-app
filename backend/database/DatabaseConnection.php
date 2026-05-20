@@ -7,6 +7,7 @@ use PDOException;
 
 /**
  * Database connection class for the Healthcare Management System
+ * Updated to use PostgreSQL (Replit built-in database)
  */
 class DatabaseConnection
 {
@@ -15,15 +16,34 @@ class DatabaseConnection
 
     private function __construct()
     {
-        $host = getenv('DB_HOST') ?: 'localhost';
-        $port = getenv('DB_PORT') ?: 3306;
-        $dbname = getenv('DB_NAME') ?: 'healthcare_db';
-        $username = getenv('DB_USER') ?: 'healthcare_user';
-        $password = getenv('DB_PASS') ?: 'your_strong_password';
+        $databaseUrl = getenv('DATABASE_URL');
 
         try {
-            $this->connection = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $username, $password);
+            if ($databaseUrl) {
+                $parsed = parse_url($databaseUrl);
+                $host = $parsed['host'];
+                $port = $parsed['port'] ?? 5432;
+                $dbname = ltrim($parsed['path'], '/');
+                $username = $parsed['user'];
+                $password = $parsed['pass'];
+
+                $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+                $this->connection = new PDO($dsn, $username, $password);
+            } elseif (getenv('PGHOST')) {
+                $host = getenv('PGHOST');
+                $port = getenv('PGPORT') ?: 5432;
+                $dbname = getenv('PGDATABASE');
+                $username = getenv('PGUSER');
+                $password = getenv('PGPASSWORD');
+
+                $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+                $this->connection = new PDO($dsn, $username, $password);
+            } else {
+                throw new \Exception("No database connection environment variables found.");
+            }
+
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new \Exception("Database connection failed: " . $e->getMessage());
         }
@@ -36,6 +56,11 @@ class DatabaseConnection
         }
 
         return self::$instance;
+    }
+
+    public static function resetInstance()
+    {
+        self::$instance = null;
     }
 
     public function getConnection()

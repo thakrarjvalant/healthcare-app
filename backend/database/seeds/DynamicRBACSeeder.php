@@ -70,7 +70,7 @@ class DynamicRBACSeeder
         ];
 
         foreach ($roles as $role) {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO dynamic_roles (name, display_name, description, color, icon, is_system_role) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO dynamic_roles (name, display_name, description, color, icon, is_system_role) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([$role['name'], $role['display_name'], $role['description'], $role['color'], $role['icon'], $role['is_system_role']]);
         }
 
@@ -159,7 +159,7 @@ class DynamicRBACSeeder
         ];
 
         foreach ($modules as $module) {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO feature_modules (name, display_name, description, icon, color, is_core_module) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO feature_modules (name, display_name, description, icon, color, is_core_module) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([$module['name'], $module['display_name'], $module['description'], $module['icon'], $module['color'], $module['is_core_module']]);
         }
 
@@ -225,7 +225,7 @@ class DynamicRBACSeeder
         ];
 
         foreach ($permissions as $permission) {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO dynamic_permissions (name, display_name, module, feature, action, resource, is_system_permission) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO dynamic_permissions (name, display_name, module, feature, action, resource, is_system_permission) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([
                 $permission['name'], 
                 $permission['display_name'], 
@@ -292,7 +292,7 @@ class DynamicRBACSeeder
                 $permissionId = $permStmt->fetchColumn();
 
                 if ($roleId && $permissionId) {
-                    $stmt = $this->db->prepare("INSERT IGNORE INTO dynamic_role_permissions (role_id, permission_id) VALUES (?, ?)");
+                    $stmt = $this->db->prepare("INSERT INTO dynamic_role_permissions (role_id, permission_id) VALUES (?, ?) ON CONFLICT DO NOTHING");
                     $stmt->execute([$roleId, $permissionId]);
                 }
             }

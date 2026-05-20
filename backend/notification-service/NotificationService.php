@@ -23,7 +23,7 @@ class NotificationService {
         }
         
         // Create notification record
-        $query = "INSERT INTO notifications (user_id, type, title, message, is_read) VALUES (?, ?, ?, ?, ?)";
+        $query = "INSERT INTO notifications (user_id, type, title, message, is_read) VALUES (?, ?, ?, ?, ?) RETURNING id";
         $stmt = $this->db->prepare($query);
         $result = $stmt->execute([
             $notificationData['user_id'],
@@ -34,7 +34,7 @@ class NotificationService {
         ]);
         
         if ($result) {
-            $notificationId = $this->db->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC); $1 = $row['id'] ?? null;
             return ['success' => true, 'notification_id' => $notificationId];
         }
         

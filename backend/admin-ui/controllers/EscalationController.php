@@ -212,7 +212,7 @@ class EscalationController {
 
         try {
             // Check if category exists
-            $categoryStmt = $this->db->prepare("SELECT id FROM escalation_categories WHERE id = ? AND is_active = 1");
+            $categoryStmt = $this->db->prepare("SELECT id FROM escalation_categories WHERE id = ? AND is_active = TRUE");
             $categoryStmt->execute([$data['category_id']]);
             if (!$categoryStmt->fetch()) {
                 return [
@@ -224,7 +224,7 @@ class EscalationController {
             // Insert new escalation
             $sql = "INSERT INTO escalations 
                     (title, description, category_id, priority, reporter_id, assigned_to, due_date) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
             
             $stmt = $this->db->prepare($sql);
             $result = $stmt->execute([
@@ -238,7 +238,7 @@ class EscalationController {
             ]);
 
             if ($result) {
-                $escalationId = $this->db->lastInsertId();
+                $row2 = $stmt->fetch(PDO::FETCH_ASSOC); $escalationId = $row2['id'] ?? null;
                 
                 // Log the creation
                 $this->logEscalationEvent($escalationId, 'create', null, $data, $userId);
@@ -320,7 +320,7 @@ class EscalationController {
             
             if (isset($data['category_id'])) {
                 // Validate category
-                $categoryStmt = $this->db->prepare("SELECT id FROM escalation_categories WHERE id = ? AND is_active = 1");
+                $categoryStmt = $this->db->prepare("SELECT id FROM escalation_categories WHERE id = ? AND is_active = TRUE");
                 $categoryStmt->execute([$data['category_id']]);
                 if (!$categoryStmt->fetch()) {
                     return [
@@ -334,7 +334,7 @@ class EscalationController {
             
             if (isset($data['status_id'])) {
                 // Validate status
-                $statusStmt = $this->db->prepare("SELECT id FROM escalation_statuses WHERE id = ? AND is_active = 1");
+                $statusStmt = $this->db->prepare("SELECT id FROM escalation_statuses WHERE id = ? AND is_active = TRUE");
                 $statusStmt->execute([$data['status_id']]);
                 if (!$statusStmt->fetch()) {
                     return [
@@ -529,7 +529,7 @@ class EscalationController {
             }
 
             // Insert comment
-            $sql = "INSERT INTO escalation_comments (escalation_id, user_id, comment, is_internal) VALUES (?, ?, ?, ?)";
+            $sql = "INSERT INTO escalation_comments (escalation_id, user_id, comment, is_internal) VALUES (?, ?, ?, ?) RETURNING id";
             $stmt = $this->db->prepare($sql);
             $result = $stmt->execute([
                 $escalationId,
@@ -539,7 +539,7 @@ class EscalationController {
             ]);
 
             if ($result) {
-                $commentId = $this->db->lastInsertId();
+                $row3 = $stmt->fetch(PDO::FETCH_ASSOC); $commentId = $row3['id'] ?? null;
                 
                 // Fetch the created comment
                 $commentSql = "SELECT ec.*, u.name as author_name, u.email as author_email
@@ -593,7 +593,7 @@ class EscalationController {
         }
 
         try {
-            $stmt = $this->db->prepare("SELECT * FROM escalation_categories WHERE is_active = 1 ORDER BY name");
+            $stmt = $this->db->prepare("SELECT * FROM escalation_categories WHERE is_active = TRUE ORDER BY name");
             $stmt->execute();
             $categories = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -633,7 +633,7 @@ class EscalationController {
         }
 
         try {
-            $stmt = $this->db->prepare("SELECT * FROM escalation_statuses WHERE is_active = 1 ORDER BY sort_order");
+            $stmt = $this->db->prepare("SELECT * FROM escalation_statuses WHERE is_active = TRUE ORDER BY sort_order");
             $stmt->execute();
             $statuses = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -663,7 +663,7 @@ class EscalationController {
         try {
             $sql = "INSERT INTO escalation_audit_logs 
                     (escalation_id, action, old_values, new_values, performed_by, ip_address, user_agent)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([

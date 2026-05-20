@@ -23,7 +23,7 @@ class ClinicalService {
         }
         
         // Create medical record
-        $query = "INSERT INTO medical_records (patient_id, doctor_id, appointment_id, diagnosis, prescription, notes) VALUES (?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO medical_records (patient_id, doctor_id, appointment_id, diagnosis, prescription, notes) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
         $stmt = $this->db->prepare($query);
         $result = $stmt->execute([
             $recordData['patient_id'],
@@ -35,7 +35,7 @@ class ClinicalService {
         ]);
         
         if ($result) {
-            $recordId = $this->db->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC); $1 = $row['id'] ?? null;
             return ['success' => true, 'record_id' => $recordId];
         }
         

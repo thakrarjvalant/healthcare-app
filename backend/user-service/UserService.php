@@ -32,7 +32,7 @@ class UserService {
         $hashedPassword = password_hash($userData['password'], PASSWORD_DEFAULT);
         
         // Insert user into database
-        $query = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?) RETURNING id RETURNING id";
         $stmt = $this->db->prepare($query);
         $result = $stmt->execute([
             $userData['name'],
@@ -42,7 +42,8 @@ class UserService {
         ]);
         
         if ($result) {
-            $userId = $this->db->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $userId = $row['id'] ?? null;
             // Send verification email
             $this->sendVerificationEmail($userData['email'], $userId);
             return ['success' => true, 'user_id' => $userId];

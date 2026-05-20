@@ -83,9 +83,8 @@ class SystemConfigSeeder
 
         foreach ($settings as $setting) {
             $stmt = $this->db->prepare("
-                INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, category, description) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
+                INSERT INTO system_settings (setting_key, setting_value, setting_type, category, description) 
+                VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([
                 $setting['setting_key'],
                 $setting['setting_value'],
@@ -117,9 +116,8 @@ class SystemConfigSeeder
 
         foreach ($schedules as $schedule) {
             $stmt = $this->db->prepare("
-                INSERT IGNORE INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, break_start_time, break_end_time, is_available) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
+                INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, break_start_time, break_end_time, is_available) 
+                VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([
                 $schedule['doctor_id'],
                 $schedule['day_of_week'],
@@ -147,9 +145,8 @@ class SystemConfigSeeder
 
         foreach ($categories as $category) {
             $stmt = $this->db->prepare("
-                INSERT IGNORE INTO document_categories (name, description, icon, color) 
-                VALUES (?, ?, ?, ?)
-            ");
+                INSERT INTO document_categories (name, description, icon, color) 
+                VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([
                 $category['name'],
                 $category['description'],
@@ -233,8 +230,7 @@ class SystemConfigSeeder
         foreach ($notifications as $notification) {
             $stmt = $this->db->prepare("
                 INSERT INTO notifications (user_id, type, title, message, is_read) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
+                VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([
                 $notification['user_id'],
                 $notification['type'],
@@ -292,8 +288,7 @@ class SystemConfigSeeder
         foreach ($queueEntries as $entry) {
             $stmt = $this->db->prepare("
                 INSERT INTO check_in_queue (patient_id, appointment_id, status, priority, estimated_wait_time, notes, called_time, completed_time, processed_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([
                 $entry['patient_id'],
                 $entry['appointment_id'],
@@ -363,8 +358,7 @@ class SystemConfigSeeder
             if ($log['user_id']) { // Only insert if user exists
                 $stmt = $this->db->prepare("
                     INSERT INTO audit_logs (user_id, action, table_name, record_id, old_values, new_values, ip_address, user_agent, session_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
                 $stmt->execute([
                     $log['user_id'],
                     $log['action'],

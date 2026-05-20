@@ -28,7 +28,7 @@ class AppointmentService {
         }
         
         // Create appointment record
-        $query = "INSERT INTO appointments (patient_id, doctor_id, date, time_slot, status) VALUES (?, ?, ?, ?, ?)";
+        $query = "INSERT INTO appointments (patient_id, doctor_id, date, time_slot, status) VALUES (?, ?, ?, ?, ?) RETURNING id";
         $stmt = $this->db->prepare($query);
         $result = $stmt->execute([
             $appointmentData['patient_id'],
@@ -39,7 +39,7 @@ class AppointmentService {
         ]);
         
         if ($result) {
-            $appointmentId = $this->db->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC); $1 = $row['id'] ?? null;
             return ['success' => true, 'appointment_id' => $appointmentId];
         }
         

@@ -62,7 +62,7 @@ class UserSeeder
         ];
 
         foreach ($users as $user) {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO users (name, email, password, role, verified) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO users (name, email, password, role, verified) VALUES (?, ?, ?, ?, ?) ON CONFLICT (email) DO NOTHING");
             $stmt->execute([
                 $user['name'],
                 $user['email'],

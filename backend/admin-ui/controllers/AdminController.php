@@ -150,7 +150,7 @@ class AdminController {
             // Insert user into database
             $stmt = $this->db->getConnection()->prepare("
                 INSERT INTO users (name, email, password, role, verified, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, 1, NOW(), NOW())
+                VALUES (?, ?, ?, ?, TRUE, NOW(), NOW()) RETURNING id
             ");
             $stmt->execute([
                 $userData['name'],
@@ -159,7 +159,7 @@ class AdminController {
                 $userData['role'] ?? 'patient'
             ]);
             
-            $userId = $this->db->getConnection()->lastInsertId();
+            $userRow = $stmt->fetch(PDO::FETCH_ASSOC); $userId = $userRow['id'] ?? null;
             
             // Fetch the created user
             $userStmt = $this->db->getConnection()->prepare("

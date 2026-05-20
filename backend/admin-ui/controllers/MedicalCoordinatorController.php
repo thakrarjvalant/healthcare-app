@@ -198,7 +198,7 @@ class MedicalCoordinatorController {
             ");
             $updateStmt->execute([$doctorId, $patientId]);
             
-            $assignmentId = $this->db->getConnection()->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC); $assignmentId = $row['id'] ?? null;
             
             return [
                 'status' => 201,

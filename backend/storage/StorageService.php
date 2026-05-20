@@ -49,7 +49,7 @@ class StorageService {
             'file_type' => $file['type']
         ];
         
-        $query = "INSERT INTO documents (user_id, filename, original_filename, file_path, file_size, file_type, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        $query = "INSERT INTO documents (user_id, filename, original_filename, file_path, file_size, file_type, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, NOW()) RETURNING id";
         $stmt = $this->db->prepare($query);
         $result = $stmt->execute([
             $documentData['user_id'],
@@ -61,7 +61,7 @@ class StorageService {
         ]);
         
         if ($result) {
-            $documentId = $this->db->lastInsertId();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC); $1 = $row['id'] ?? null;
             return ['success' => true, 'document_id' => $documentId, 'document' => $documentData];
         }
         

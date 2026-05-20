@@ -59,7 +59,7 @@ class PatientDoctorAssignmentSeeder
 
         foreach ($assignments as $assignment) {
             try {
-                $stmt = $this->db->prepare("INSERT IGNORE INTO patient_doctor_assignments (patient_id, doctor_id, assigned_by, notes) VALUES (?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO patient_doctor_assignments (patient_id, doctor_id, assigned_by, notes) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING");
                 $stmt->execute([
                     $assignment['patient_id'],
                     $assignment['doctor_id'],

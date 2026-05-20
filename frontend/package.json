@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend application for the Healthcare Management System",
   "main": "src/index.js",
+  "proxy": "http://localhost:8000",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

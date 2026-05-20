@@ -30,7 +30,7 @@ class RoleController {
 
 
         try {
-            $stmt = $this->db->prepare("SELECT * FROM dynamic_roles WHERE is_active = 1 ORDER BY name");
+            $stmt = $this->db->prepare("SELECT * FROM dynamic_roles WHERE is_active = TRUE ORDER BY name");
             $stmt->execute();
             $roles = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -101,7 +101,7 @@ class RoleController {
             ]);
 
             if ($result) {
-                $roleId = $this->db->lastInsertId();
+                $row = $stmt->fetch(PDO::FETCH_ASSOC); $roleId = $row['id'] ?? null;
                 
                 // Log the creation
                 $this->rbacManager->logRBACEvent('create', 'role', $roleId, null, $data, $userId);
@@ -289,7 +289,7 @@ class RoleController {
             }
 
             // Check if role is assigned to any users
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM user_dynamic_roles WHERE role_id = ? AND is_active = 1");
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM user_dynamic_roles WHERE role_id = ? AND is_active = TRUE");
             $stmt->execute([$roleId]);
             $userCount = $stmt->fetchColumn();
             
@@ -301,7 +301,7 @@ class RoleController {
             }
 
             // Soft delete - set is_active to 0
-            $stmt = $this->db->prepare("UPDATE dynamic_roles SET is_active = 0 WHERE id = ?");
+            $stmt = $this->db->prepare("UPDATE dynamic_roles SET is_active = FALSE WHERE id = ?");
             $result = $stmt->execute([$roleId]);
 
             if ($result) {
@@ -674,7 +674,7 @@ class RoleController {
 
 
         try {
-            $stmt = $this->db->prepare("SELECT * FROM feature_modules WHERE is_active = 1 ORDER BY name");
+            $stmt = $this->db->prepare("SELECT * FROM feature_modules WHERE is_active = TRUE ORDER BY name");
             $stmt->execute();
             $modules = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 

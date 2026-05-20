@@ -70,7 +70,7 @@ class EscalationManagementSeeder
         ];
 
         foreach ($categories as $category) {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO escalation_categories (name, display_name, description, priority) VALUES (?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO escalation_categories (name, display_name, description, priority) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([$category['name'], $category['display_name'], $category['description'], $category['priority']]);
         }
 
@@ -128,7 +128,7 @@ class EscalationManagementSeeder
         ];
 
         foreach ($statuses as $status) {
-            $stmt = $this->db->prepare("INSERT IGNORE INTO escalation_statuses (name, display_name, description, is_final, sort_order) VALUES (?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO escalation_statuses (name, display_name, description, is_final, sort_order) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING");
             $stmt->execute([$status['name'], $status['display_name'], $status['description'], $status['is_final'], $status['sort_order']]);
         }
 

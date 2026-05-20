@@ -1,55 +1,14 @@
 // API Service for making HTTP requests to backend services
 
-// Use dynamic base URL detection to prevent hardcoded URL issues
+// Use relative paths so the React dev server proxy routes to the API gateway
 const getApiBaseUrl = (service = 'main') => {
-  // Always try environment variables first, regardless of service type
-  if (process.env.REACT_APP_USER_SERVICE_BASE_URL && service === 'user') {
-    return process.env.REACT_APP_USER_SERVICE_BASE_URL;
-  }
-  
-  if (process.env.REACT_APP_API_BASE_URL && service === 'main') {
-    return process.env.REACT_APP_API_BASE_URL;
-  }
-  
-  if (process.env.REACT_APP_ADMIN_UI_BASE_URL && service === 'admin') {
-    return process.env.REACT_APP_ADMIN_UI_BASE_URL;
-  }
-  
-  // Use current origin for relative URLs only as a last resort
-  // But ensure we're pointing to the correct API port (8000)
-  if (typeof window !== 'undefined') {
-    const currentOrigin = window.location.origin;
-    // If we're running on localhost:3000 (frontend dev server), 
-    // redirect API calls to localhost:8000 (API gateway)
-    if (currentOrigin.includes('localhost:3000')) {
-      if (service === 'user') {
-        return 'http://localhost:8000/api/users';
-      }
-      // For admin endpoints, route through the API gateway
-      if (service === 'admin') {
-        return 'http://localhost:8000/api';
-      }
-      return 'http://localhost:8000/api';
-    }
-    
-    // For other cases, use relative paths
-    if (service === 'user') {
-      return `${currentOrigin}/api/users`;
-    }
-    if (service === 'admin') {
-      return `${currentOrigin}/api`;
-    }
-    return `${currentOrigin}/api`;
-  }
-  
-  // Fallback to localhost
   if (service === 'user') {
-    return 'http://localhost:8000/api/users';
+    return '/api/users';
   }
   if (service === 'admin') {
-    return 'http://localhost:8000/api';
+    return '/api';
   }
-  return 'http://localhost:8000/api';
+  return '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
