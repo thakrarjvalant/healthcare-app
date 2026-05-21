@@ -9,35 +9,35 @@ sleep 1
 
 echo "Starting API Gateway on port 8000..."
 cd /home/runner/workspace/backend/api-gateway
-php -S localhost:8000 index.php > /tmp/api-gateway.log 2>&1 &
+php -S 0.0.0.0:8000 index.php > /tmp/api-gateway.log 2>&1 &
 
 echo "Starting User Service on port 8001..."
 cd /home/runner/workspace/backend/user-service
-php -S localhost:8001 index.php > /tmp/user-service.log 2>&1 &
+php -S 0.0.0.0:8001 index.php > /tmp/user-service.log 2>&1 &
 
 echo "Starting Appointment Service on port 8002..."
 cd /home/runner/workspace/backend/appointment-service
-php -S localhost:8002 index.php > /tmp/appointment-service.log 2>&1 &
+php -S 0.0.0.0:8002 index.php > /tmp/appointment-service.log 2>&1 &
 
 echo "Starting Clinical Service on port 8003..."
 cd /home/runner/workspace/backend/clinical-service
-php -S localhost:8003 index.php > /tmp/clinical-service.log 2>&1 &
+php -S 0.0.0.0:8003 index.php > /tmp/clinical-service.log 2>&1 &
 
 echo "Starting Notification Service on port 8004..."
 cd /home/runner/workspace/backend/notification-service
-php -S localhost:8004 index.php > /tmp/notification-service.log 2>&1 &
+php -S 0.0.0.0:8004 index.php > /tmp/notification-service.log 2>&1 &
 
 echo "Starting Billing Service on port 8005..."
 cd /home/runner/workspace/backend/billing-service
-php -S localhost:8005 index.php > /tmp/billing-service.log 2>&1 &
+php -S 0.0.0.0:8005 index.php > /tmp/billing-service.log 2>&1 &
 
 echo "Starting Storage Service on port 8006..."
 cd /home/runner/workspace/backend/storage
-php -S localhost:8006 index.php > /tmp/storage-service.log 2>&1 &
+php -S 0.0.0.0:8006 index.php > /tmp/storage-service.log 2>&1 &
 
 echo "Starting Admin UI Service on port 8007..."
 cd /home/runner/workspace/backend/admin-ui
-php -S localhost:8007 index.php > /tmp/admin-ui.log 2>&1 &
+php -S 0.0.0.0:8007 index.php > /tmp/admin-ui.log 2>&1 &
 
 # Wait for API gateway to be ready before starting frontend
 echo "Waiting for API gateway to be ready..."
