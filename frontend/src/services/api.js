@@ -65,35 +65,26 @@ class ApiService {
     try {
       const response = await fetch(fullUrl, config);
       
-      // Handle different HTTP status codes appropriately
+      // Always read the body as text first, then parse \u2014 prevents "body stream already read"
+      const responseText = await response.text();
+
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        
+
+        // Try to parse error response from the text we already read
         try {
-          // Try to parse error response
-          const errorData = await response.json();
+          const errorData = JSON.parse(responseText);
           if (errorData && errorData.message) {
             errorMessage = errorData.message;
           }
         } catch (parseError) {
-          // If we can't parse JSON, check if it's HTML content
-          const text = await response.text();
-          if (text.startsWith('<')) {
-            // It's HTML content, likely an error page
+          if (responseText.startsWith('<')) {
             errorMessage = 'Server error occurred. Please try again later.';
           } else {
-            // Try to parse as JSON anyway
-            try {
-              const jsonData = JSON.parse(text);
-              if (jsonData && jsonData.message) {
-                errorMessage = jsonData.message;
-              }
-            } catch (jsonError) {
-              errorMessage = text.substring(0, 100) + '...';
-            }
+            errorMessage = responseText.substring(0, 100) + '...';
           }
         }
-        
+
         // Special handling for authentication errors
         if (response.status === 401) {
           errorMessage = 'Invalid credentials. Please check your email and password.';
@@ -102,40 +93,33 @@ class ApiService {
         } else if (response.status >= 500) {
           errorMessage = 'Server error occurred. Please try again later.';
         }
-        
+
         throw new Error(errorMessage);
       }
-      
+
       // Check if response is actually JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        // If not JSON, try to get text response
-        const text = await response.text();
-        // Check if it's HTML content
-        if (text.startsWith('<')) {
+        // If not JSON, check if it's HTML content
+        if (responseText.startsWith('<')) {
           throw new Error('Server returned an HTML page instead of JSON. This usually indicates a server error.');
         }
         try {
           // Try to parse as JSON anyway (in case content-type is wrong)
-          return JSON.parse(text);
+          return JSON.parse(responseText);
         } catch (jsonError) {
-          // If it's not valid JSON, return the text
-          throw new Error(`Expected JSON response but got: ${text.substring(0, 100)}...`);
+          throw new Error(`Expected JSON response but got: ${responseText.substring(0, 100)}...`);
         }
       }
-      
-      // For JSON responses, try to parse
+
+      // For JSON responses, parse from the text we already read
       try {
-        const data = await response.json();
-        return data;
+        return JSON.parse(responseText);
       } catch (jsonError) {
-        // Handle the case where response claims to be JSON but isn't valid
-        const text = await response.text();
-        // Check if it's HTML content
-        if (text.startsWith('<')) {
+        if (responseText.startsWith('<')) {
           throw new Error('Server returned an HTML page instead of JSON. This usually indicates a server error.');
         }
-        throw new Error(`Invalid JSON response: ${text.substring(0, 100)}...`);
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
       }
     } catch (error) {
       // Network error handling
