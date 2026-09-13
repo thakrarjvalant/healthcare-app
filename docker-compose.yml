@@ -96,6 +96,9 @@ services:
       - "8001:8001"
     volumes:
       - ./backend/user-service:/var/www/html
+      # Preserve Composer dependencies installed in the image; the source bind
+      # mount otherwise hides /var/www/html/vendor at runtime.
+      - /var/www/html/vendor
       - ./backend/shared:/var/www/shared
       - ./backend/database:/var/www/html/database
     environment:
@@ -199,6 +202,9 @@ services:
       - "8007:8007"
     volumes:
       - ./backend/admin-ui:/var/www/html
+      # Preserve Composer dependencies installed in the image; the source bind
+      # mount otherwise hides /var/www/html/vendor at runtime.
+      - /var/www/html/vendor
       - ./backend/shared:/var/www/shared
       - ./backend/user-service:/var/www/user-service
       - ./backend/database:/var/www/database

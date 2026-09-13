@@ -2,6 +2,16 @@
 
 // Use relative paths so the React dev server proxy routes to the API gateway
 const getApiBaseUrl = (service = 'main') => {
+  if (service === 'user' && process.env.REACT_APP_USER_SERVICE_BASE_URL) {
+    return process.env.REACT_APP_USER_SERVICE_BASE_URL;
+  }
+  if (service === 'admin' && process.env.REACT_APP_ADMIN_UI_BASE_URL) {
+    return process.env.REACT_APP_ADMIN_UI_BASE_URL;
+  }
+  if (service === 'main' && process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+
   if (service === 'user') {
     return '/api/users';
   }
@@ -25,7 +35,7 @@ class ApiService {
     // Use actual token from localStorage for authentication
     const token = localStorage.getItem('token');
     const authHeader = token ? `Bearer ${token}` : '';
-    
+
     return {
       'Content-Type': 'application/json',
       'Authorization': authHeader
@@ -64,7 +74,7 @@ class ApiService {
 
     try {
       const response = await fetch(fullUrl, config);
-      
+
       // Always read the body as text first, then parse \u2014 prevents "body stream already read"
       const responseText = await response.text();
 
@@ -131,7 +141,7 @@ class ApiService {
         });
         throw new Error('Network error - Could not connect to the server. Please check your connection and server status.');
       }
-      
+
       // Re-throw other errors
       throw error;
     }

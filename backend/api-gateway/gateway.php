@@ -35,14 +35,14 @@ error_log('API Gateway request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER[
 
 // Order matters! More specific routes should come before general ones
 $routes = [
-    '/api/medical-coordinator' => 'http://localhost:8007',
-    '/api/admin'              => 'http://localhost:8007',
-    '/api/users'              => 'http://localhost:8001',
-    '/api/appointments'       => 'http://localhost:8002',
-    '/api/clinical'           => 'http://localhost:8003',
-    '/api/notifications'      => 'http://localhost:8004',
-    '/api/billing'            => 'http://localhost:8005',
-    '/api/storage'            => 'http://localhost:8006',
+    '/api/medical-coordinator' => 'http://admin-ui:8007',
+    '/api/admin'              => 'http://admin-ui:8007',
+    '/api/users'              => 'http://user-service:8001',
+    '/api/appointments'       => 'http://appointment-service:8002',
+    '/api/clinical'           => 'http://clinical-service:8003',
+    '/api/notifications'      => 'http://notification-service:8004',
+    '/api/billing'            => 'http://billing-service:8005',
+    '/api/storage'            => 'http://storage-service:8006',
 ];
 
 // Health endpoint
@@ -62,7 +62,7 @@ if (parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/favicon.ico') {
 if (php_sapi_name() !== 'cli' && parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) === '/api/currentUser') {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
     $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    $ch2 = curl_init('http://localhost:8001/me');
+    $ch2 = curl_init('http://user-service:8001/me');
     curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch2, CURLOPT_HTTPHEADER, ['Authorization: ' . $authHeader, 'Content-Type: application/json']);
     $body2 = curl_exec($ch2);
@@ -149,7 +149,8 @@ foreach ($headers as $key => $value) {
 }
 curl_setopt($ch, CURLOPT_HTTPHEADER, $header_array);
 
-// Disable automatic decompression to handle it manually
+// Let cURL transparently decode compressed responses. The decoded body must not
+// be decompressed again before it is returned to the client.
 curl_setopt($ch, CURLOPT_ENCODING, '');
 
 if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH'])) {
@@ -159,18 +160,26 @@ if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH'])) {
 }
 
 $response = curl_exec($ch);
+$curl_error_number = curl_errno($ch);
+$curl_error_message = curl_error($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-$header = substr($response, 0, $header_size);
-$body = substr($response, $header_size);
 
 // Log curl errors
-if (curl_errno($ch)) {
-    $curl_error = curl_error($ch);
-    error_log("cURL error: " . $curl_error);
+if ($curl_error_number !== 0) {
+    error_log("cURL error: " . $curl_error_message);
+    curl_close($ch);
+    jsonResponse([
+        'error' => 'Service unavailable',
+        'message' => 'The requested service is unavailable. Please try again later.'
+    ], 502);
 }
 
 curl_close($ch);
+
+$response = (string) $response;
+$header = substr($response, 0, $header_size);
+$body = substr($response, $header_size);
 
 error_log("Service response HTTP code: " . $http_code);
 error_log("Service response headers: " . $header);
@@ -192,15 +201,6 @@ foreach (explode("\r\n", $header) as $header_line) {
     } elseif (stripos($header_line, 'Authorization:') === 0) {
         header($header_line);
     }
-}
-
-// Handle decompression if needed
-if ($contentEncoding === 'gzip') {
-    $body = gzdecode($body);
-    error_log("Decompressed gzip body");
-} elseif ($contentEncoding === 'deflate') {
-    $body = gzinflate($body);
-    error_log("Decompressed deflate body");
 }
 
 // Ensure we always return JSON for API endpoints
